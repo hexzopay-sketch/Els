@@ -7,48 +7,51 @@ warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 err() { echo -e "${RED}[-]${NC} $1"; exit 1; }
 
 for arg in "$@"; do
-  [ "$arg" = "--help" ] || [ "$arg" = "-h" ] && { echo "Usage: $0 [domain] [--cc] [--nosys]"; echo "  --cc     Codespace mode (sets --nosys, prompts to open ports)"; echo "  --nosys  Skip systemd service setup"; exit 0; }
+  [ "$arg" = "--help" ] || [ "$arg" = "-h" ] && { echo "Usage: $0 [domain] [--cc] [--nosys]"; echo "  --cc     Codespace mode (auto URL, no nginx/certbot, port prompt)"; echo "  --nosys  Skip systemd service setup"; exit 0; }
 done
 [ $EUID -ne 0 ] && err "Run as root (sudo)."
 
-NOSYS=false
-CC=false
+NOSYS=false; CC=false
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --cc) CC=true; NOSYS=true; shift ;;
     --nosys) NOSYS=true; shift ;;
-    -*)
-      err "Unknown flag: $1"
-      ;;
-    *)
-      POSITIONAL+=("$1")
-      shift
-      ;;
+    -*) err "Unknown flag: $1" ;;
+    *) POSITIONAL+=("$1"); shift ;;
   esac
 done
 
-DOMAIN="${POSITIONAL[0]:-}"
-if [ -z "$DOMAIN" ]; then
-  read -r -p "Enter domain (e.g. panel.yoursite.com): " DOMAIN
-  [ -z "$DOMAIN" ] && err "Domain required."
-fi
-
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVER_PORT=8080
-SERVICE_NAME="levl7-server"
-SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-NGINX_CONF="/etc/nginx/sites-available/${DOMAIN}"
-NGINX_ENABLED="/etc/nginx/sites-enabled/${DOMAIN}"
+SERVER_BIN="$REPO_DIR/server"
+SERVER_LOG="$REPO_DIR/server.log"
 
-# -- Pre-flight -----------------------------------------------------------
-log "Installing for domain: $DOMAIN"
+if $CC; then
+  CODESPACE_NAME="${CODESPACE_NAME:-}"
+  [ -z "$CODESPACE_NAME" ] && CODESPACE_NAME="${GITHUB_CODESPACE_TOKEN:-}" && true
+  [ -z "$CODESPACE_NAME" ] && CODESPACE_NAME="$(hostname)" && true
+  DOMAIN="${CODESPACE_NAME}-${SERVER_PORT}.app.github.dev"
+  log "Codespace mode — URL: https://$DOMAIN"
+else
+  DOMAIN="${POSITIONAL[0]:-}"
+  if [ -z "$DOMAIN" ]; then
+    read -r -p "Enter domain (e.g. panel.yoursite.com): " DOMAIN
+    [ -z "$DOMAIN" ] && err "Domain required."
+  fi
+  log "Installing for domain: $DOMAIN"
+fi
+
 log "Repo dir: $REPO_DIR"
 
 # -- Dependencies ---------------------------------------------------------
 log "Installing system packages..."
 apt-get update -qq
-apt-get install -y -qq curl gnupg software-properties-common nginx certbot python3-certbot-nginx mosquitto mosquitto-clients
+PKGS="curl gnupg software-properties-common mosquitto mosquitto-clients"
+if ! $CC; then
+  PKGS="$PKGS nginx certbot python3-certbot-nginx"
+fi
+apt-get install -y -qq $PKGS
 
 if ! command -v go &>/dev/null; then
   log "Installing Go..."
@@ -85,9 +88,8 @@ MQTT_PASS=""
 warn "MQTT setup skipped (run 'mosquitto_passwd' manually if needed)"
 
 # -- Systemd Service ------------------------------------------------------
-if $NOSYS; then
-  log "Skipping systemd service setup (--nosys). Run manually: $REPO_DIR/server -web $SERVER_PORT"
-else
+if ! $CC && ! $NOSYS; then
+  SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
   log "Creating systemd service..."
   cat > "$SERVICE_FILE" <<EOF
 [Unit]
@@ -107,16 +109,18 @@ LimitNOFILE=65536
 [Install]
 WantedBy=multi-user.target
 EOF
-
   systemctl daemon-reload || warn "systemd not available"
   systemctl enable "$SERVICE_NAME" || warn "Could not enable service via systemd"
 fi
 
 # -- Nginx -----------------------------------------------------------------
-log "Configuring nginx..."
-mkdir -p /etc/nginx/snippets
+if ! $CC; then
+  NGINX_CONF="/etc/nginx/sites-available/${DOMAIN}"
+  NGINX_ENABLED="/etc/nginx/sites-enabled/${DOMAIN}"
 
-cat > "$NGINX_CONF" <<'NGINXEOF'
+  log "Configuring nginx..."
+  mkdir -p /etc/nginx/snippets
+  cat > "$NGINX_CONF" <<'NGINXEOF'
 server {
     listen 80;
     server_name DOMAIN_PLACEHOLDER;
@@ -147,28 +151,19 @@ server {
     }
 }
 NGINXEOF
+  sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g; s/SERVER_PORT_PLACEHOLDER/$SERVER_PORT/g" "$NGINX_CONF"
+  ln -sf "$NGINX_CONF" "$NGINX_ENABLED"
+  rm -f /etc/nginx/sites-enabled/default
+  nginx -t || err "Nginx config test failed."
 
-sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g; s/SERVER_PORT_PLACEHOLDER/$SERVER_PORT/g" "$NGINX_CONF"
-
-ln -sf "$NGINX_CONF" "$NGINX_ENABLED"
-rm -f /etc/nginx/sites-enabled/default
-
-nginx -t || err "Nginx config test failed."
-
-# -- Start Services --------------------------------------------------------
-SERVER_BIN="$REPO_DIR/server"
-SERVER_LOG="$REPO_DIR/server.log"
-
-if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
-  systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
-else
-  nginx 2>/dev/null || true
+  if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+    systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
+  else
+    nginx 2>/dev/null || true
+  fi
 fi
 
-if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
-  systemctl restart "$SERVICE_NAME" 2>/dev/null || systemctl start "$SERVICE_NAME" 2>/dev/null || true
-fi
-
+# -- Start Go Server --------------------------------------------------------
 log "Starting Go server..."
 cd "$REPO_DIR"
 nohup "$SERVER_BIN" -web "$SERVER_PORT" > "$SERVER_LOG" 2>&1 &
@@ -192,26 +187,24 @@ else
   warn "Try manually: cd $REPO_DIR && ./server -web $SERVER_PORT"
 fi
 
-# -- Codespace: port visibility check ------------------------------------
+# -- Codespace: auto port visibility -------------------------------------
 if $CC; then
-  echo ""
-  warn "=== Codespace: make ports public ==="
-  warn "Run these in your LOCAL terminal (not this one):"
-  echo ""
-  echo "  gh codespace ports visibility 80:public"
-  echo "  gh codespace ports visibility $SERVER_PORT:public"
-  echo ""
-  read -r -p "Press Enter once ports are public... "
-  log "Proceeding with SSL..."
+  if command -v gh &>/dev/null && [ -n "$CODESPACE_NAME" ]; then
+    log "Making port $SERVER_PORT public..."
+    gh codespace ports visibility "$SERVER_PORT":public -c "$CODESPACE_NAME" 2>/dev/null && \
+      log "Port $SERVER_PORT is now public" || \
+      warn "Could not auto-set port visibility. Try: VS Code Ports tab → right-click $SERVER_PORT → Port Visibility → Public"
+  else
+    warn "Set port $SERVER_PORT to Public in VS Code: Ports tab → right-click → Port Visibility → Public"
+  fi
+  log "Your panel is at: https://$DOMAIN"
+else
+  # -- SSL via Certbot (non-codespace) ---------------------------------------
+  log "Obtaining SSL certificate..."
+  certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "admin@${DOMAIN}" --redirect || \
+    warn "Certbot failed. You may need to run: certbot --nginx -d $DOMAIN"
 fi
-
-# -- SSL via Certbot -------------------------------------------------------
-log "Obtaining SSL certificate..."
-certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "admin@${DOMAIN}" --redirect || \
-  warn "Certbot failed. You may need to run: certbot --nginx -d $DOMAIN"
 
 log "--- Installation complete ---"
 log "Domain: https://$DOMAIN"
 log "MQTT password: $MQTT_PASS"
-log ""
-log "Save the MQTT password above. Update your bots to connect to this server."
