@@ -66,7 +66,7 @@ fi
 # -- Build Go Server ------------------------------------------------------
 log "Building Go server..."
 cd "$REPO_DIR"
-cd cnc && go build -o "$REPO_DIR/server" . && cd "$REPO_DIR"
+cd cnc && go build -buildvcs=false -o "$REPO_DIR/server" . && cd "$REPO_DIR"
 
 # -- Build Frontend -------------------------------------------------------
 log "Building frontend..."
@@ -77,7 +77,7 @@ rm -rf cnc/out && cp -r out cnc/out
 
 # -- Rebuild with embedded frontend ---------------------------------------
 log "Rebuilding Go server with embedded frontend..."
-cd cnc && go build -o "$REPO_DIR/server" . && cd "$REPO_DIR"
+cd cnc && go build -buildvcs=false -o "$REPO_DIR/server" . && cd "$REPO_DIR"
 
 # -- MQTT Setup (skip -- container compat) ---------------------------------
 MQTT_PASS=""
@@ -176,20 +176,22 @@ if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2
 fi
 
 log "Starting Go server..."
+cd "$REPO_DIR"
 nohup "$SERVER_BIN" -web "$SERVER_PORT" > "$SERVER_LOG" 2>&1 &
 SERVER_PID=$!
 sleep 1
 
-if kill -0 "$SERVER_PID" 2>/dev/null && ss -tlnp 2>/dev/null | grep -q ":$SERVER_PORT "; then
-  log "Server running (PID $SERVER_PID) on port $SERVER_PORT"
+# Check server is actually listening
+if kill -0 "$SERVER_PID" 2>/dev/null; then
+  if command -v ss &>/dev/null; then
+    ss -tlnp 2>/dev/null | grep -q ":$SERVER_PORT " && log "Server running (PID $SERVER_PID) on port $SERVER_PORT" || warn "PID $SERVER_PID exists but not listening on $SERVER_PORT"
+  else
+    log "Server started (PID $SERVER_PID)"
+  fi
 else
-  warn "Server failed to start. Check $SERVER_LOG:"
-  head -20 "$SERVER_LOG" 2>/dev/null | while IFS= read -r line; do warn "  $line"; done
-  # Last resort: try running once more with output visible
-  warn "Trying one more time with visible output..."
-  "$SERVER_BIN" -web "$SERVER_PORT" &
-  sleep 1
-  ss -tlnp | grep -q ":$SERVER_PORT " && log "Server running on try #2" || err "Server won't start. Fix manually."
+  warn "Server failed to start. Error log:"
+  tail -30 "$SERVER_LOG" 2>/dev/null | while IFS= read -r line; do warn "  $line"; done || true
+  warn "Try manually: cd $REPO_DIR && ./server -web $SERVER_PORT"
 fi
 
 log "--- Installation complete ---"
