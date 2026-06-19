@@ -155,11 +155,48 @@ rm -f /etc/nginx/sites-enabled/default
 
 nginx -t || err "Nginx config test failed."
 
+# -- Start Services --------------------------------------------------------
+SERVER_BIN="$REPO_DIR/server"
+SERVER_LOG="$REPO_DIR/server.log"
+
+if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+  systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
+else
+  nginx 2>/dev/null || true
+fi
+
+if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+  systemctl restart "$SERVICE_NAME" 2>/dev/null || systemctl start "$SERVICE_NAME" 2>/dev/null || true
+fi
+
+log "Starting Go server..."
+cd "$REPO_DIR"
+nohup "$SERVER_BIN" -web "$SERVER_PORT" > "$SERVER_LOG" 2>&1 &
+SERVER_PID=$!
+sleep 1
+
+SERVER_UP=false
+if kill -0 "$SERVER_PID" 2>/dev/null; then
+  if command -v ss &>/dev/null; then
+    ss -tlnp 2>/dev/null | grep -q ":$SERVER_PORT " && SERVER_UP=true || true
+  else
+    SERVER_UP=true
+  fi
+fi
+
+if $SERVER_UP; then
+  log "Server running (PID $SERVER_PID) on port $SERVER_PORT"
+else
+  warn "Server failed to start. Error log:"
+  tail -30 "$SERVER_LOG" 2>/dev/null | while IFS= read -r line; do warn "  $line"; done || true
+  warn "Try manually: cd $REPO_DIR && ./server -web $SERVER_PORT"
+fi
+
 # -- Codespace: port visibility check ------------------------------------
 if $CC; then
   echo ""
   warn "=== Codespace: make ports public ==="
-  warn "Open these ports in your local terminal (not this one):"
+  warn "Run these in your LOCAL terminal (not this one):"
   echo ""
   echo "  gh codespace ports visibility 80:public"
   echo "  gh codespace ports visibility $SERVER_PORT:public"
@@ -172,41 +209,6 @@ fi
 log "Obtaining SSL certificate..."
 certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "admin@${DOMAIN}" --redirect || \
   warn "Certbot failed. You may need to run: certbot --nginx -d $DOMAIN"
-
-# -- Start Services --------------------------------------------------------
-SERVER_BIN="$REPO_DIR/server"
-SERVER_LOG="$REPO_DIR/server.log"
-
-# nginx: try systemd then direct
-if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
-  systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
-else
-  nginx 2>/dev/null || true
-fi
-
-# Go server: try systemd then direct
-if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
-  systemctl restart "$SERVICE_NAME" 2>/dev/null || systemctl start "$SERVICE_NAME" 2>/dev/null || true
-fi
-
-log "Starting Go server..."
-cd "$REPO_DIR"
-nohup "$SERVER_BIN" -web "$SERVER_PORT" > "$SERVER_LOG" 2>&1 &
-SERVER_PID=$!
-sleep 1
-
-# Check server is actually listening
-if kill -0 "$SERVER_PID" 2>/dev/null; then
-  if command -v ss &>/dev/null; then
-    ss -tlnp 2>/dev/null | grep -q ":$SERVER_PORT " && log "Server running (PID $SERVER_PID) on port $SERVER_PORT" || warn "PID $SERVER_PID exists but not listening on $SERVER_PORT"
-  else
-    log "Server started (PID $SERVER_PID)"
-  fi
-else
-  warn "Server failed to start. Error log:"
-  tail -30 "$SERVER_LOG" 2>/dev/null | while IFS= read -r line; do warn "  $line"; done || true
-  warn "Try manually: cd $REPO_DIR && ./server -web $SERVER_PORT"
-fi
 
 log "--- Installation complete ---"
 log "Domain: https://$DOMAIN"
