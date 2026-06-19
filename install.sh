@@ -29,10 +29,12 @@ SERVER_LOG="$REPO_DIR/server.log"
 
 if $CC; then
   CODESPACE_NAME="${CODESPACE_NAME:-}"
-  [ -z "$CODESPACE_NAME" ] && CODESPACE_NAME="${GITHUB_CODESPACE_TOKEN:-}" && true
-  [ -z "$CODESPACE_NAME" ] && CODESPACE_NAME="$(hostname)" && true
+  if [ -z "$CODESPACE_NAME" ]; then
+    read -r -p "Enter your codespace name (from 'gh codespace list'): " CODESPACE_NAME
+    [ -z "$CODESPACE_NAME" ] && err "Codespace name required."
+  fi
   DOMAIN="${CODESPACE_NAME}-${SERVER_PORT}.app.github.dev"
-  log "Codespace mode — URL: https://$DOMAIN"
+  log "Codespace: $CODESPACE_NAME — URL: https://$DOMAIN"
 else
   DOMAIN="${POSITIONAL[0]:-}"
   if [ -z "$DOMAIN" ]; then
