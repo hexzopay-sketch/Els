@@ -130,48 +130,49 @@ EOF
 
   systemctl daemon-reload || warn "systemd not available"
   systemctl enable "$SERVICE_NAME" || warn "Could not enable service via systemd"
-fi || warn "Could not enable service via systemd"
+fi
 
 # -- Nginx -----------------------------------------------------------------
 log "Configuring nginx..."
 mkdir -p /etc/nginx/snippets
 
-cat > "$NGINX_CONF" <<EOF
+cat > "$NGINX_CONF" <<'NGINXEOF'
 server {
     listen 80;
-    server_name $DOMAIN;
+    server_name DOMAIN_PLACEHOLDER;
     client_max_body_size 100M;
 
     location / {
-        proxy_pass http://127.0.0.1:$SERVER_PORT;
+        proxy_pass http://127.0.0.1:SERVER_PORT_PLACEHOLDER;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 86400;
     }
 
     location /ws {
-        proxy_pass http://127.0.0.1:$SERVER_PORT;
+        proxy_pass http://127.0.0.1:SERVER_PORT_PLACEHOLDER;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 86400;
     }
 }
-EOF
+NGINXEOF
+
+sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g; s/SERVER_PORT_PLACEHOLDER/$SERVER_PORT/g" "$NGINX_CONF"
 
 ln -sf "$NGINX_CONF" "$NGINX_ENABLED"
 rm -f /etc/nginx/sites-enabled/default
 
-# Test nginx config
 nginx -t || err "Nginx config test failed."
 
 # -- SSL via Certbot -------------------------------------------------------
@@ -179,17 +180,20 @@ log "Obtaining SSL certificate..."
 certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "admin@${DOMAIN}" --redirect || \
   warn "Certbot failed. You may need to run: certbot --nginx -d $DOMAIN"
 
-if ! $NOSYS; then
-  systemctl reload nginx || warn "Could not reload nginx"
-fi
+# -- Start Services --------------------------------------------------------
+# Try systemd first, fall back to direct start
+start_svc() {
+  local name="$1" cmd="$2"
+  if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+    systemctl restart "$name" || systemctl start "$name" || true
+  else
+    $cmd &
+    log "$name started directly (PID $!)"
+  fi
+}
 
-# -- Start ----------------------------------------------------------------
-if $NOSYS; then
-  log "Start manually: $REPO_DIR/server -web $SERVER_PORT"
-else
-  log "Starting $SERVICE_NAME..."
-  systemctl restart "$SERVICE_NAME" || warn "Could not start service via systemd"
-fi
+start_svc "nginx" "nginx"
+start_svc "$SERVICE_NAME" "$REPO_DIR/server -web $SERVER_PORT"
 
 log "--- Installation complete ---"
 log "Domain: https://$DOMAIN"
