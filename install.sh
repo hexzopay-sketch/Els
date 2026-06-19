@@ -79,30 +79,9 @@ rm -rf cnc/out && cp -r out cnc/out
 log "Rebuilding Go server with embedded frontend..."
 cd cnc && go build -o "$REPO_DIR/server" . && cd "$REPO_DIR"
 
-# -- MQTT Setup (optional) -------------------------------------------------
+# -- MQTT Setup (skip -- container compat) ---------------------------------
 MQTT_PASS=""
-if command -v mosquitto_passwd &>/dev/null; then
-  log "Configuring Mosquitto MQTT..."
-  MQTT_PASS=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 24 | head -1)
-  mkdir -p /etc/mosquitto/conf.d
-  cat > /etc/mosquitto/conf.d/levl7.conf <<EOF
-listener 1883 127.0.0.1
-allow_anonymous false
-password_file /etc/mosquitto/levl7.passwd
-EOF
-  touch /etc/mosquitto/levl7.passwd
-  mosquitto_passwd -b /etc/mosquitto/levl7.passwd levl7c2 "$MQTT_PASS" 2>/dev/null && {
-    sed -i "s|Password: \".*\"|Password: \"${MQTT_PASS}\"|" "$REPO_DIR/cnc/mqtt.go"
-    (cd cnc && go build -o "$REPO_DIR/server" .) 2>/dev/null || true
-    if ! $NOSYS; then
-      systemctl enable mosquitto 2>/dev/null || true
-      systemctl restart mosquitto 2>/dev/null || true
-    fi
-    log "MQTT configured"
-  } || warn "MQTT setup skipped"
-else
-  warn "mosquitto_passwd not found — MQTT setup skipped"
-fi
+warn "MQTT setup skipped (run 'mosquitto_passwd' manually if needed)"
 
 # -- Systemd Service ------------------------------------------------------
 if $NOSYS; then
@@ -185,9 +164,9 @@ certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "admin@${DOMA
 start_svc() {
   local name="$1" cmd="$2"
   if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
-    systemctl restart "$name" || systemctl start "$name" || true
+    systemctl restart "$name" 2>/dev/null || systemctl start "$name" 2>/dev/null || true
   else
-    $cmd &
+    nohup $cmd >/dev/null 2>&1 &
     log "$name started directly (PID $!)"
   fi
 }
