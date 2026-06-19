@@ -1,0 +1,14 @@
+{
+  "database": {
+    "type": "sqlite",
+    "db_path": "db",
+    "mongodb_uri": "",
+    "mongodb_db": "levl7"
+  },
+  "security": {
+    "rate_limit_per_min": 20,
+    "max_body_bytes": 1048576,
+    "allowed_origins": ["*"],
+    "encryption_key": "levl7-gwhekermauapallo5555"
+  }
+}
