@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { slideRight, slideLeft, scaleIn } from "@/lib/motion-variants";
 import MathCaptcha from "@/components/MathCaptcha";
+import CircularText from "@/components/CircularText";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
@@ -17,7 +18,7 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const { showToast } = useToast();
-  const { login, admin } = useAuth();
+  const { loginWithTransition, admin } = useAuth();
   const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -36,10 +37,8 @@ export default function RegisterPage() {
         new URLSearchParams({ username, password, captcha: captchaToken }),
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
-      login(loginRes.data.access_token);
-      admin(loginRes.data.admin);
+      loginWithTransition(loginRes.data.access_token, loginRes.data.admin, "/dashboard");
       showToast("Account created! You are now logged in.", "success");
-      router.push("/dashboard");
     } catch (err) {
       const error = err as AxiosError<{ detail: string }>;
       if (error.response) {
@@ -57,97 +56,91 @@ export default function RegisterPage() {
   const isDisabled = !username || !email || !password || isSubmitting || !captchaToken;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid opacity-40" />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent" />
+    <div className="min-h-screen flex items-center justify-center bg-[#0d1117] px-4 relative overflow-hidden">
+      <CircularText text="LEVL7 STRESSER • CREATE ACCOUNT • SECURE NETWORK • " />
+      
       <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-        className="w-full max-w-md relative"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
       >
-        <motion.div variants={slideRight} initial="initial" animate="animate"
-          className="bg-panel border border-border rounded-xl p-8"
-        >
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-8 shadow-sm">
           <div className="text-center mb-8">
-            <motion.img
-              variants={scaleIn} initial="initial" animate="animate"
+            <img
               src="imagens/logo.png"
               alt="Logo"
-              className="h-16 mx-auto mb-4"
+              className="h-12 mx-auto mb-4"
             />
-            <motion.h1 variants={slideLeft} initial="initial" animate="animate"
-              className="text-2xl font-bold text-white"
-            >
+            <h1 className="text-xl font-semibold text-[#e6edf3]">
               Create Account
-            </motion.h1>
-            <p className="text-text-muted mt-1 text-sm">Register to get started</p>
+            </h1>
+            <p className="text-[#8b949e] mt-2 text-sm">Register to get started</p>
           </div>
 
-          <form onSubmit={handleRegister} className="space-y-5">
-            <motion.div variants={slideRight} initial="initial" animate="animate"
-              className="flex items-center gap-2 border border-border rounded-lg px-3 py-2.5 bg-background focus-within:border-primary/50 transition-colors"
-            >
-              <User size={18} className="text-text-muted shrink-0" />
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="w-full bg-transparent text-white placeholder-text-muted focus:outline-none text-sm"
-              />
-            </motion.div>
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-[#e6edf3] block">Username</label>
+              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#58a6ff] transition-colors">
+                <User size={16} className="text-[#8b949e] shrink-0" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="bg-transparent border-none outline-none text-[#e6edf3] placeholder:text-[#484f58] w-full text-sm"
+                  placeholder="Choose a username"
+                />
+              </div>
+            </div>
 
-            <motion.div variants={slideLeft} initial="initial" animate="animate"
-              className="flex items-center gap-2 border border-border rounded-lg px-3 py-2.5 bg-background focus-within:border-primary/50 transition-colors"
-            >
-              <Mail size={18} className="text-text-muted shrink-0" />
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full bg-transparent text-white placeholder-text-muted focus:outline-none text-sm"
-              />
-            </motion.div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-[#e6edf3] block">Email</label>
+              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#58a6ff] transition-colors">
+                <Mail size={16} className="text-[#8b949e] shrink-0" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-transparent border-none outline-none text-[#e6edf3] placeholder:text-[#484f58] w-full text-sm"
+                  placeholder="Enter your email"
+                />
+              </div>
+            </div>
 
-            <motion.div variants={slideRight} initial="initial" animate="animate"
-              className="flex items-center gap-2 border border-border rounded-lg px-3 py-2.5 bg-background focus-within:border-primary/50 transition-colors"
-            >
-              <Lock size={18} className="text-text-muted shrink-0" />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full bg-transparent text-white placeholder-text-muted focus:outline-none text-sm"
-              />
-            </motion.div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-[#e6edf3] block">Password</label>
+              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#58a6ff] transition-colors">
+                <Lock size={16} className="text-[#8b949e] shrink-0" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-transparent border-none outline-none text-[#e6edf3] placeholder:text-[#484f58] w-full text-sm"
+                  placeholder="Create a password"
+                />
+              </div>
+            </div>
 
-            <motion.div variants={scaleIn} initial="initial" animate="animate">
+            <div className="pt-2">
               <MathCaptcha onVerify={setCaptchaToken} />
-            </motion.div>
+            </div>
 
-            <motion.button
+            <button
               type="submit"
               disabled={isDisabled}
-              variants={scaleIn} initial="initial" animate="animate"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              className="w-full bg-primary text-white font-medium py-2.5 rounded-lg text-sm hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="w-full bg-[#238636] text-white font-medium py-2 rounded-md text-sm hover:bg-[#2ea043] disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-4 border border-[rgba(240,246,252,0.1)]"
             >
-              {isSubmitting ? "Creating account..." : "Create Account"}
-            </motion.button>
-
-            <p className="text-center text-sm text-text-muted">
-              Already have an account?{" "}
-              <a href="/login" className="text-primary hover:underline">Sign In</a>
-            </p>
+              {isSubmitting ? "Creating account..." : "Create account"}
+            </button>
           </form>
-        </motion.div>
+
+          <div className="mt-6 text-center text-sm text-[#8b949e]">
+            Already have an account?{" "}
+            <button onClick={() => router.push("/login")} className="text-[#58a6ff] hover:underline">
+              Sign in
+            </button>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

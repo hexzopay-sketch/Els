@@ -42,10 +42,45 @@ body {
   animation: grid-scroll 20s linear infinite;
 }
 
+/* Soft UI extras */
+.card-hover {
+  @apply transition-all duration-200;
+}
+.card-hover:hover {
+  @apply -translate-y-0.5 shadow-lg shadow-black/20;
+  border-color: rgba(88,166,255,0.2);
+}
+
+.glass-overlay {
+  background: linear-gradient(135deg, rgba(88,166,255,0.03) 0%, transparent 50%);
+}
+
+.glow-border {
+  position: relative;
+}
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(88,166,255,0.1), transparent 50%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.glow-border:hover::after {
+  opacity: 1;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* scrollbar */
-::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0d1117; }
-::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: #484f58; }
 
 * { scrollbar-width: thin; scrollbar-color: #30363d #0d1117; }

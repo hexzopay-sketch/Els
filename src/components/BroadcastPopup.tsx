@@ -27,9 +27,10 @@ export default function BroadcastPopup() {
       const res = await fetch("/api/v1/broadcasts");
       if (!res.ok) return;
       const data: Broadcast[] = await res.json();
-      const active = data.find((b) => !isExpired(b.end_time));
-      if (active && !seenBroadcasts.has(active.id)) {
-        setBroadcast(active);
+      const active = data.filter((b) => !isExpired(b.end_time) && !seenBroadcasts.has(b.id));
+      if (active.length > 0) {
+        const picked = active[Math.floor(Math.random() * active.length)];
+        setBroadcast(picked);
       }
     } catch {}
   }, []);
@@ -38,19 +39,19 @@ export default function BroadcastPopup() {
     checkBroadcasts();
   }, [checkBroadcasts]);
 
-  useEffect(() => {
-    if (!broadcast) return;
-    const timer = setTimeout(dismiss, 30000);
-    return () => clearTimeout(timer);
-  }, [broadcast]);
-
-  const dismiss = () => {
+  const dismiss = useCallback(() => {
     if (broadcast) {
       seenBroadcasts.add(broadcast.id);
     }
     setBroadcast(null);
     setDismissed(true);
-  };
+  }, [broadcast]);
+
+  useEffect(() => {
+    if (!broadcast) return;
+    const timer = setTimeout(dismiss, 30000);
+    return () => clearTimeout(timer);
+  }, [broadcast, dismiss]);
 
   return (
     <AnimatePresence>

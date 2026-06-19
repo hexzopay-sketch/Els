@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Image, Clock, User } from "lucide-react";
-import { slideUp } from "@/lib/motion-variants";
+import { Image, Clock, User, ShieldCheck } from "lucide-react";
+import { slideUp, cardStagger } from "@/lib/motion-variants";
 import Loader from "@/components/Loader";
 
 interface Proof {
@@ -36,41 +36,51 @@ export default function PowerProofPage() {
   if (loading) return <Loader variant={1} />;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="min-h-screen bg-[#0d1117]">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
         <motion.div variants={slideUp} initial="initial" animate="animate" className="flex items-center gap-3">
-          <Image size={24} className="text-primary" />
-          <h1 className="text-xl font-semibold text-white">Power Proof</h1>
+          <ShieldCheck size={24} className="text-[#58a6ff]" />
+          <div>
+            <h1 className="text-lg font-semibold text-[#e6edf3] tracking-tight">Power Proof</h1>
+            <p className="text-sm text-[#8b949e]">Verified attack results &amp; demonstrations</p>
+          </div>
         </motion.div>
 
         {proofs.length === 0 ? (
-          <div className="text-center py-20 text-text-muted">
+          <motion.div variants={slideUp} initial="initial" animate="animate"
+            className="text-center py-20 text-[#8b949e]"
+          >
             <Image size={48} className="mx-auto mb-3 opacity-40" />
-            <p>No proofs uploaded yet.</p>
-          </div>
+            <p className="text-sm">No proofs uploaded yet.</p>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div
+            variants={cardStagger}
+            initial="initial"
+            animate="animate"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
             {proofs.map((p) => (
-              <motion.div key={p.id} variants={slideUp} initial="initial" animate="animate"
-                className="bg-panel border border-border rounded-lg overflow-hidden group"
+              <motion.div key={p.id} variants={slideUp}
+                className="group rounded-lg border border-[#30363d] bg-[#161b22] overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-[#58a6ff]/20 hover:shadow-lg hover:shadow-black/20"
               >
-                <a href={p.url} target="_blank" rel="noopener noreferrer" className="block">
+                <a href={p.url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden">
                   {p.url.match(/\.(mp4|webm|ogg)$/i) ? (
                     <video src={p.url} className="w-full h-48 object-cover" controls />
                   ) : (
-                    <img src={p.url} alt={p.caption || "Proof"} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img src={p.url} alt={p.caption || "Proof"} className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" />
                   )}
                 </a>
                 <div className="p-3 space-y-1.5">
-                  {p.caption && <p className="text-white text-sm">{p.caption}</p>}
-                  <div className="flex items-center gap-3 text-text-muted text-xs">
+                  {p.caption && <p className="text-[#e6edf3] text-sm">{p.caption}</p>}
+                  <div className="flex items-center gap-3 text-[#8b949e] text-xs">
                     <span className="flex items-center gap-1"><User size={12} />{p.created_by}</span>
                     <span className="flex items-center gap-1"><Clock size={12} />{new Date(p.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

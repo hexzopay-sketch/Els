@@ -2,17 +2,19 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "/api/v1",
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
-  },
 });
 
 api.interceptors.request.use(config => {
-  // Para ambiente de desenvolvimento, use sessionStorage ou estado global
-  // localStorage não funciona em artifacts do Claude
   const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.request.use(config => {
+  if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData) && !(config.data instanceof URLSearchParams)) {
+    config.headers['Content-Type'] = 'application/json';
   }
   return config;
 });

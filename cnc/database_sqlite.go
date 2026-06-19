@@ -64,6 +64,18 @@ func (s *SQLiteBackend) Init() error {
 	s.execDB(`CREATE TABLE IF NOT EXISTS sessions (
 		token TEXT PRIMARY KEY, username TEXT NOT NULL
 	)`)
+	s.execDB(`CREATE TABLE IF NOT EXISTS workers (
+		id TEXT PRIMARY KEY, server_id TEXT NOT NULL, server_ip TEXT DEFAULT '',
+		worker_type TEXT DEFAULT '', status TEXT DEFAULT 'offline',
+		pid INTEGER DEFAULT 0, port INTEGER DEFAULT 0,
+		binary_path TEXT DEFAULT '', last_heartbeat TEXT DEFAULT '',
+		created_at TEXT DEFAULT '', installed_by TEXT DEFAULT ''
+	)`)
+	s.execDB(`CREATE TABLE IF NOT EXISTS github_config (
+		id TEXT PRIMARY KEY DEFAULT 'main', repo_url TEXT DEFAULT '',
+		token TEXT DEFAULT '', branch TEXT DEFAULT 'main',
+		file_path TEXT DEFAULT 'master.json', enabled INTEGER DEFAULT 0
+	)`)
 	s.migrateAttacksProxy()
 	s.migrateJSON()
 	s.seedAdminUser()
@@ -417,4 +429,72 @@ func (s *SQLiteBackend) GetActiveBroadcasts() ([]Broadcast, error) {
 		bs = append(bs, b)
 	}
 	return bs, nil
+}
+
+func (s *SQLiteBackend) SaveWorker(w Worker) error {
+	hb := ""
+	if !w.LastHeartbeat.IsZero() {
+		hb = w.LastHeartbeat.Format(time.RFC3339)
+	}
+	ca := ""
+	if !w.CreatedAt.IsZero() {
+		ca = w.CreatedAt.Format(time.RFC3339)
+	}
+	s.mustExec("INSERT OR REPLACE INTO workers (id,server_id,server_ip,worker_type,status,pid,port,binary_path,last_heartbeat,created_at,installed_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+		w.ID, w.ServerID, w.ServerIP, w.WorkerType, w.Status, w.PID, w.Port, w.BinaryPath, hb, ca, w.InstalledBy)
+	return nil
+}
+
+func (s *SQLiteBackend) GetAllWorkers() ([]Worker, error) {
+	rows, err := s.db.Query("SELECT id,server_id,server_ip,worker_type,status,pid,port,binary_path,last_heartbeat,created_at,installed_by FROM workers ORDER BY created_at DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var ws []Worker
+	for rows.Next() {
+		var w Worker
+		var hb, ca string
+		rows.Scan(&w.ID, &w.ServerID, &w.ServerIP, &w.WorkerType, &w.Status, &w.PID, &w.Port, &w.BinaryPath, &hb, &ca, &w.InstalledBy)
+		w.LastHeartbeat, _ = timeParse(hb)
+		w.CreatedAt, _ = timeParse(ca)
+		ws = append(ws, w)
+	}
+	return ws, nil
+}
+
+func (s *SQLiteBackend) DeleteWorker(id string) error {
+	s.mustExec("DELETE FROM workers WHERE id=?", id)
+	return nil
+}
+
+func (s *SQLiteBackend) GetWorkerByID(id string) (Worker, bool) {
+	row := s.db.QueryRow("SELECT id,server_id,server_ip,worker_type,status,pid,port,binary_path,last_heartbeat,created_at,installed_by FROM workers WHERE id=?", id)
+	var w Worker
+	var hb, ca string
+	if err := row.Scan(&w.ID, &w.ServerID, &w.ServerIP, &w.WorkerType, &w.Status, &w.PID, &w.Port, &w.BinaryPath, &hb, &ca, &w.InstalledBy); err != nil {
+		return Worker{}, false
+	}
+	w.LastHeartbeat, _ = timeParse(hb)
+	w.CreatedAt, _ = timeParse(ca)
+	return w, true
+}
+
+func (s *SQLiteBackend) SaveGitHubConfig(cfg GitHubConfig) error {
+	en := 0
+	if cfg.Enabled { en = 1 }
+	s.mustExec("INSERT OR REPLACE INTO github_config (id,repo_url,token,branch,file_path,enabled) VALUES (?,?,?,?,?,?)",
+		cfg.ID, cfg.RepoURL, cfg.Token, cfg.Branch, cfg.FilePath, en)
+	return nil
+}
+
+func (s *SQLiteBackend) GetGitHubConfig() (GitHubConfig, error) {
+	var cfg GitHubConfig
+	var en int
+	err := s.db.QueryRow("SELECT id,repo_url,token,branch,file_path,enabled FROM github_config WHERE id='main'").Scan(&cfg.ID, &cfg.RepoURL, &cfg.Token, &cfg.Branch, &cfg.FilePath, &en)
+	if err != nil {
+		return GitHubConfig{ID: "main", Branch: "main", FilePath: "master.json", Enabled: false}, nil
+	}
+	cfg.Enabled = en == 1
+	return cfg, nil
 }

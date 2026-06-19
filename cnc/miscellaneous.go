@@ -26,6 +26,7 @@ var (
 	plans          = &sync.Map{}
 	methodList     = &sync.Map{}
 	sessions       = &sync.Map{}
+	workersMap     = &sync.Map{}
 	mu             sync.Mutex
 	dbPath         = "db"
 )
@@ -73,6 +74,8 @@ type Method struct {
 	Premium       bool   `json:"premium"`
 	Concurrents   int    `json:"concurrents"`
 	Proxy         bool   `json:"proxy"`
+	ScriptName    string `json:"script_name"`
+	Flags         string `json:"flags"`
 }
 
 type Proof struct {
@@ -82,6 +85,29 @@ type Proof struct {
 	Caption   string    `json:"caption"`
 	CreatedBy string    `json:"created_by"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type Worker struct {
+	ID            string    `json:"id"`
+	ServerID      string    `json:"server_id"`
+	ServerIP      string    `json:"server_ip"`
+	WorkerType    string    `json:"worker_type"`
+	Status        string    `json:"status"`
+	PID           int       `json:"pid"`
+	Port          int       `json:"port"`
+	BinaryPath    string    `json:"binary_path"`
+	LastHeartbeat time.Time `json:"last_heartbeat"`
+	CreatedAt     time.Time `json:"created_at"`
+	InstalledBy   string    `json:"installed_by"`
+}
+
+type GitHubConfig struct {
+	ID       string `json:"id"`
+	RepoURL  string `json:"repo_url"`
+	Token    string `json:"token"`
+	Branch   string `json:"branch"`
+	FilePath string `json:"file_path"`
+	Enabled  bool   `json:"enabled"`
 }
 
 type Attack struct {
@@ -184,6 +210,10 @@ func loadData() {
 	for _, a := range as {
 		ongoingAttacks.Store(a.ID, a)
 	}
+	ws, _ := storage.GetAllWorkers()
+	for _, w := range ws {
+		workersMap.Store(w.ID, w)
+	}
 }
 
 func SaveUser(u User) {
@@ -236,6 +266,14 @@ func deleteMethod(name string) {
 
 func deleteOngoingAttack(id string) {
 	storage.DeleteOngoingAttack(id)
+}
+
+func SaveWorker(w Worker) {
+	storage.SaveWorker(w)
+}
+
+func SaveGitHubConfig(cfg GitHubConfig) {
+	storage.SaveGitHubConfig(cfg)
 }
 
 func getBotCount() int {

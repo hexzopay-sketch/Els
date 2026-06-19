@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Copy, Terminal, Bomb, Shield, Key } from "lucide-react";
+import { Copy, Terminal, Bomb, Shield, Key, FileText } from "lucide-react";
 import { motion } from "motion/react";
-import { slideUp } from "@/lib/motion-variants";
+import { slideUp, cardStagger } from "@/lib/motion-variants";
 import api from "@/lib/api";
 
 const baseURL = "/api/v1";
@@ -48,11 +48,11 @@ const endpoints = [
 ];
 
 const methodColors: Record<string, string> = {
-  GET: "text-success",
-  POST: "text-primary",
-  PUT: "text-warning",
-  PATCH: "text-warning",
-  DELETE: "text-danger",
+  GET: "text-[#3fb950]",
+  POST: "text-[#58a6ff]",
+  PUT: "text-[#d29922]",
+  PATCH: "text-[#d29922]",
+  DELETE: "text-[#f85149]",
 };
 
 export default function ApiDocs() {
@@ -80,37 +80,39 @@ curl -X POST ${baseURL}/launch \\
   -d '{"host":"1.2.3.4","port":80,"time":60,"method":"HTTP-FLOOD","concurrents":1}'`;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="min-h-screen bg-[#0d1117]">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
         <motion.div variants={slideUp} initial="initial" animate="animate">
           <div className="flex items-center gap-3 mb-1">
-            <Terminal size={20} className="text-primary" />
-            <h1 className="text-lg font-semibold text-white">API v1 Reference</h1>
+            <Terminal size={20} className="text-[#58a6ff]" />
+            <h1 className="text-lg font-semibold text-[#e6edf3] tracking-tight">API v1 Reference</h1>
           </div>
-          <p className="text-sm text-text-muted">Base URL: <code className="text-primary">{baseURL}</code></p>
+          <p className="text-sm text-[#8b949e]">Base URL: <code className="text-[#58a6ff] bg-[#161b22] px-1.5 py-0.5 rounded text-xs">{baseURL}</code></p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <motion.div variants={slideUp} initial="initial" animate="animate" className="space-y-4">
             <div>
-              <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Attack Fields</h2>
-              <div className="border border-border rounded-lg overflow-x-auto">
+              <h2 className="text-xs font-medium text-[#8b949e] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <FileText size={12} /> Attack Fields
+              </h2>
+              <div className="border border-[#30363d] rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left px-3 py-2 text-text-muted font-medium text-xs uppercase">Field</th>
-                      <th className="text-left px-3 py-2 text-text-muted font-medium text-xs uppercase">Description</th>
-                      <th className="text-left px-3 py-2 text-text-muted font-medium text-xs uppercase">Value</th>
-                      <th className="text-left px-3 py-2 text-text-muted font-medium text-xs uppercase">Req</th>
+                    <tr className="border-b border-[#30363d] bg-[#161b22]">
+                      <th className="text-left px-3 py-2 text-[#8b949e] font-medium text-xs uppercase tracking-wider">Field</th>
+                      <th className="text-left px-3 py-2 text-[#8b949e] font-medium text-xs uppercase tracking-wider">Description</th>
+                      <th className="text-left px-3 py-2 text-[#8b949e] font-medium text-xs uppercase tracking-wider">Value</th>
+                      <th className="text-left px-3 py-2 text-[#8b949e] font-medium text-xs uppercase tracking-wider">Req</th>
                     </tr>
                   </thead>
                   <tbody>
                     {fields.map((item, i) => (
-                      <tr key={i} className="border-t border-border/50">
-                        <td className="px-3 py-2.5"><code className="text-primary text-xs font-mono">{item.field}</code></td>
-                        <td className="px-3 py-2.5 text-text-muted text-xs">{item.description}</td>
-                        <td className="px-3 py-2.5 text-text-muted text-xs max-w-[200px] truncate">{item.value}</td>
-                        <td className="px-3 py-2.5">{item.required ? <span className="text-success text-xs">Yes</span> : <span className="text-text-muted text-xs">No</span>}</td>
+                      <tr key={i} className="border-t border-[#30363d]/50 hover:bg-[#161b22]/50 transition-colors">
+                        <td className="px-3 py-2.5"><code className="text-[#58a6ff] text-xs font-mono">{item.field}</code></td>
+                        <td className="px-3 py-2.5 text-[#8b949e] text-xs">{item.description}</td>
+                        <td className="px-3 py-2.5 text-[#8b949e] text-xs max-w-[200px] truncate">{item.value}</td>
+                        <td className="px-3 py-2.5">{item.required ? <span className="text-[#3fb950] text-xs">Yes</span> : <span className="text-[#8b949e] text-xs">No</span>}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -119,13 +121,13 @@ curl -X POST ${baseURL}/launch \\
             </div>
 
             <div>
-              <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Example</h2>
-              <div className="bg-subtle border border-border rounded-lg overflow-hidden">
-                <pre className="p-4 text-xs text-text-muted font-mono overflow-x-auto whitespace-pre-wrap">{curlExample}</pre>
-                <div className="border-t border-border px-4 py-2 flex justify-end">
+              <h2 className="text-xs font-medium text-[#8b949e] uppercase tracking-wider mb-2">Example</h2>
+              <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#161b22]">
+                <pre className="p-4 text-xs text-[#8b949e] font-mono overflow-x-auto whitespace-pre-wrap">{curlExample}</pre>
+                <div className="border-t border-[#30363d] px-4 py-2 flex justify-end">
                   <button
                     onClick={() => copyToClipboard(curlExample, "curl")}
-                    className="flex items-center gap-1.5 text-xs text-text-muted hover:text-primary transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-[#8b949e] hover:text-[#58a6ff] transition-colors"
                   >
                     <Copy size={12} />
                     {copied === "curl" ? "Copied!" : "Copy"}
@@ -136,35 +138,35 @@ curl -X POST ${baseURL}/launch \\
           </motion.div>
 
           <motion.div variants={slideUp} initial="initial" animate="animate" className="space-y-4">
-            <h2 className="flex items-center gap-2 text-xs font-medium text-text-muted uppercase tracking-wider">
+            <h2 className="flex items-center gap-2 text-xs font-medium text-[#8b949e] uppercase tracking-wider">
               <Bomb size={13} />
               All Endpoints
             </h2>
-            <div className="border border-border rounded-lg overflow-x-auto max-h-[600px] overflow-y-auto">
+            <div className="border border-[#30363d] rounded-lg overflow-hidden max-h-[600px] overflow-y-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-border bg-muted/50 sticky top-0">
-                    <th className="text-left px-3 py-2 text-text-muted font-medium uppercase">Method</th>
-                    <th className="text-left px-3 py-2 text-text-muted font-medium uppercase">Path</th>
-                    <th className="text-left px-3 py-2 text-text-muted font-medium uppercase">Description</th>
-                    <th className="text-left px-3 py-2 text-text-muted font-medium uppercase">Auth</th>
+                  <tr className="border-b border-[#30363d] bg-[#161b22] sticky top-0">
+                    <th className="text-left px-3 py-2 text-[#8b949e] font-medium uppercase tracking-wider">Method</th>
+                    <th className="text-left px-3 py-2 text-[#8b949e] font-medium uppercase tracking-wider">Path</th>
+                    <th className="text-left px-3 py-2 text-[#8b949e] font-medium uppercase tracking-wider">Description</th>
+                    <th className="text-left px-3 py-2 text-[#8b949e] font-medium uppercase tracking-wider">Auth</th>
                   </tr>
                 </thead>
                 <tbody>
                   {endpoints.map((ep, i) => (
-                    <tr key={i} className="border-t border-border/50 hover:bg-muted/20 transition-colors">
+                    <tr key={i} className="border-t border-[#30363d]/50 hover:bg-[#161b22]/50 transition-colors">
                       <td className="px-3 py-2">
-                        <span className={`font-mono font-medium ${methodColors[ep.method] || "text-text-muted"}`}>{ep.method}</span>
+                        <span className={`font-mono font-medium ${methodColors[ep.method] || "text-[#8b949e]"}`}>{ep.method}</span>
                       </td>
-                      <td className="px-3 py-2 font-mono text-white">{ep.path}</td>
-                      <td className="px-3 py-2 text-text-muted">{ep.desc}</td>
+                      <td className="px-3 py-2 font-mono text-[#e6edf3]">{ep.path}</td>
+                      <td className="px-3 py-2 text-[#8b949e]">{ep.desc}</td>
                       <td className="px-3 py-2">
                         {ep.auth === "Admin" ? (
-                          <span className="inline-flex items-center gap-1 bg-warning/10 text-warning px-1.5 py-0.5 rounded text-[10px]">
+                          <span className="inline-flex items-center gap-1 bg-[#d29922]/10 text-[#d29922] px-1.5 py-0.5 rounded text-[10px] font-medium">
                             <Shield size={9} /> Admin
                           </span>
                         ) : (
-                          <span className="text-text-muted text-[10px]">{ep.auth}</span>
+                          <span className="text-[#8b949e] text-[10px]">{ep.auth}</span>
                         )}
                       </td>
                     </tr>
@@ -173,25 +175,23 @@ curl -X POST ${baseURL}/launch \\
               </table>
             </div>
 
-            <div className="bg-subtle border border-border rounded-lg p-4 space-y-2">
-              <h3 className="text-xs font-medium text-white">Authentication</h3>
-              <p className="text-xs text-text-muted">Use Bearer token in the Authorization header:</p>
+            <div className="border border-[#30363d] rounded-lg bg-[#161b22] p-4 space-y-2">
+              <h3 className="text-xs font-medium text-[#e6edf3]">Authentication</h3>
+              <p className="text-xs text-[#8b949e]">Use Bearer token in the Authorization header:</p>
               {apiKey ? (
-                <div className="flex items-center gap-2 bg-background border border-border rounded px-3 py-2">
-                  <Key size={14} className="text-primary shrink-0" />
-                  <code className="text-xs text-primary font-mono flex-1 truncate">{apiKey}</code>
+                <div className="flex items-center gap-2 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2">
+                  <Key size={14} className="text-[#58a6ff] shrink-0" />
+                  <code className="text-xs text-[#58a6ff] font-mono flex-1 truncate">{apiKey}</code>
                   <button
                     onClick={() => copyToClipboard(apiKey, "api-key")}
-                    className="flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors shrink-0"
+                    className="flex items-center gap-1 text-xs text-[#8b949e] hover:text-[#58a6ff] transition-colors shrink-0"
                   >
                     <Copy size={12} />
                     {copied === "api-key" ? "Copied!" : "Copy"}
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-text-muted">
-                  <a href="/login" className="text-primary underline">Log in</a> to see your API key, or get it from the <a href="/profile" className="text-primary underline">profile page</a>.
-                </p>
+                <p className="text-xs text-[#8b949e] italic">Log in to see your API key</p>
               )}
             </div>
           </motion.div>

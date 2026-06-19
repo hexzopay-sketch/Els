@@ -124,6 +124,8 @@ type AttackCommand struct {
 	Concurrents int    `json:"concurrents"`
 	Rpc         int    `json:"rpc"`
 	Layer       string `json:"layer"`
+	ScriptName  string `json:"script_name"`
+	Flags       string `json:"flags"`
 }
 
 func (cmd AttackCommand) Publish() {

@@ -41,6 +41,12 @@ type StorageBackend interface {
 	DeleteBroadcast(id string) error
 	GetAllBroadcasts() ([]Broadcast, error)
 	GetActiveBroadcasts() ([]Broadcast, error)
+	SaveWorker(w Worker) error
+	GetAllWorkers() ([]Worker, error)
+	DeleteWorker(id string) error
+	GetWorkerByID(id string) (Worker, bool)
+	SaveGitHubConfig(cfg GitHubConfig) error
+	GetGitHubConfig() (GitHubConfig, error)
 }
 
 var storage StorageBackend

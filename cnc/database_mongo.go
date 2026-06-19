@@ -256,6 +256,57 @@ func (m *MongoDBBackend) GetAllBroadcasts() ([]Broadcast, error) {
 	return bs, nil
 }
 
+func (m *MongoDBBackend) SaveWorker(w Worker) error {
+	workersMap.Store(w.ID, w)
+	_, err := m.col("workers").UpdateOne(context.TODO(),
+		bson.M{"id": w.ID},
+		bson.M{"$set": w},
+		options.UpdateOne().SetUpsert(true))
+	return err
+}
+
+func (m *MongoDBBackend) GetAllWorkers() ([]Worker, error) {
+	cursor, err := m.col("workers").Find(context.TODO(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+	var ws []Worker
+	cursor.All(context.TODO(), &ws)
+	return ws, nil
+}
+
+func (m *MongoDBBackend) DeleteWorker(id string) error {
+	workersMap.Delete(id)
+	_, err := m.col("workers").DeleteOne(context.TODO(), bson.M{"id": id})
+	return err
+}
+
+func (m *MongoDBBackend) GetWorkerByID(id string) (Worker, bool) {
+	v, ok := workersMap.Load(id)
+	if !ok {
+		return Worker{}, false
+	}
+	return v.(Worker), true
+}
+
+func (m *MongoDBBackend) SaveGitHubConfig(cfg GitHubConfig) error {
+	_, err := m.col("github_config").UpdateOne(context.TODO(),
+		bson.M{"id": "main"},
+		bson.M{"$set": cfg},
+		options.UpdateOne().SetUpsert(true))
+	return err
+}
+
+func (m *MongoDBBackend) GetGitHubConfig() (GitHubConfig, error) {
+	var cfg GitHubConfig
+	err := m.col("github_config").FindOne(context.TODO(), bson.M{"id": "main"}).Decode(&cfg)
+	if err != nil {
+		return GitHubConfig{ID: "main", Branch: "main", FilePath: "master.json", Enabled: false}, nil
+	}
+	return cfg, nil
+}
+
 func (m *MongoDBBackend) GetActiveBroadcasts() ([]Broadcast, error) {
 	now := time.Now().Format(time.RFC3339)
 	cursor, err := m.col("broadcasts").Find(context.TODO(), bson.M{"$or": []bson.M{

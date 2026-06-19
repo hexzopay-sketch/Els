@@ -1,14 +1,18 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from '@/lib/api';
+import AuthTransition from '@/components/AuthTransition';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   isLogged: boolean;
   isAdmin: boolean;
   isLoading: boolean;
   login: (token: string) => void;
+  loginWithTransition: (token: string, adminValue: boolean, redirectUrl: string) => void;
   admin: (value: boolean) => void;
   logout: () => void;
+  logoutWithTransition: () => void;
   checkAuth: () => Promise<void>;
 }
 
@@ -22,6 +26,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLogged, setIsLogged] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  const [transitionState, setTransitionState] = useState<{ isVisible: boolean; type: "login" | "logout"; redirectUrl?: string }>({
+    isVisible: false,
+    type: "login"
+  });
+  const router = useRouter();
 
   // Função para verificar se o token é válido
   const checkAuth = async () => {
@@ -72,12 +82,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsAdmin(value);
   };
 
+  const loginWithTransition = (token: string, adminValue: boolean, redirectUrl: string) => {
+    setTransitionState({ isVisible: true, type: "login", redirectUrl });
+    // We set the actual auth state after transition or during it
+    setTimeout(() => {
+      login(token);
+      admin(adminValue);
+    }, 1000); // Set auth state mid-transition
+  };
+
   // Função para fazer logout
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('admin');
     setIsLogged(false);
     setIsAdmin(false);
+  };
+
+  const logoutWithTransition = () => {
+    setTransitionState({ isVisible: true, type: "logout", redirectUrl: "/login" });
+    setTimeout(() => {
+      logout();
+    }, 1000);
+  };
+
+  const handleTransitionComplete = () => {
+    if (transitionState.redirectUrl) {
+      router.push(transitionState.redirectUrl);
+    }
+    setTransitionState(prev => ({ ...prev, isVisible: false }));
   };
 
   // Verificar autenticação ao montar o componente
@@ -101,13 +134,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading,
     admin,
     login,
+    loginWithTransition,
     logout,
+    logoutWithTransition,
     checkAuth
   };
 
   return (
     <AuthContext.Provider value={value}>
       {children}
+      <AuthTransition 
+        isVisible={transitionState.isVisible} 
+        type={transitionState.type} 
+        onComplete={handleTransitionComplete} 
+      />
     </AuthContext.Provider>
   );
 }

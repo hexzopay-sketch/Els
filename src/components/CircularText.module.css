@@ -1,0 +1,64 @@
+.container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.2;
+  overflow: hidden;
+}
+
+.circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: spin 60s linear infinite;
+}
+
+.circleReverse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: spin-reverse 80s linear infinite;
+  opacity: 0.5;
+}
+
+.char {
+  position: absolute;
+  font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #58a6ff;
+  transform-origin: center center;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.charReverse {
+  position: absolute;
+  font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #8b949e;
+  transform-origin: center center;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}

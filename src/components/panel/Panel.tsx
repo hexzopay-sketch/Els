@@ -32,12 +32,13 @@ export default function Panel() {
     }, []);
 
     return (
-        <div className="bg-subtle border border-border rounded-lg p-5">
-            <div className="flex border-b border-border pb-4 mb-4 gap-1">
+        <div className="rounded-lg border border-[#30363d] bg-[#161b22] p-5">
+            <h2 className="text-sm font-medium text-[#e6edf3] mb-4">Launch Attack</h2>
+            <div className="flex border-b border-[#30363d] pb-4 mb-4 gap-1">
                 <button
                     onClick={() => setActiveLayer('L4')}
                     className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
-                        activeLayer === 'L4' ? 'bg-primary/10 text-primary' : 'text-text-muted hover:text-white'
+                        activeLayer === 'L4' ? 'bg-[#58a6ff]/10 text-[#58a6ff]' : 'text-[#8b949e] hover:text-[#e6edf3]'
                     }`}
                 >
                     Layer 4
@@ -45,7 +46,7 @@ export default function Panel() {
                 <button
                     onClick={() => setActiveLayer('L7')}
                     className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
-                        activeLayer === 'L7' ? 'bg-primary/10 text-primary' : 'text-text-muted hover:text-white'
+                        activeLayer === 'L7' ? 'bg-[#58a6ff]/10 text-[#58a6ff]' : 'text-[#8b949e] hover:text-[#e6edf3]'
                     }`}
                 >
                     Layer 7

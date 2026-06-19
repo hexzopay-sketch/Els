@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { slideRight, slideLeft, scaleIn } from "@/lib/motion-variants";
 import MathCaptcha from "@/components/MathCaptcha";
+import CircularText from "@/components/CircularText";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -16,7 +17,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const { showToast } = useToast();
-  const { login, admin } = useAuth();
+  const { loginWithTransition, admin } = useAuth();
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -33,10 +34,8 @@ export default function LoginPage() {
       );
       const token = response.data.access_token;
       const isadmin = response.data.admin;
-      login(token);
-      admin(isadmin);
+      loginWithTransition(token, isadmin, "/dashboard");
       showToast("Logged in successfully!", "success");
-      router.push("/dashboard");
     } catch (err) {
       const error = err as AxiosError<{ detail: string }>;
       if (error.response) {
@@ -54,83 +53,77 @@ export default function LoginPage() {
   const isDisabled = !username || !password || isSubmitting || !captchaToken;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid opacity-40" />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent" />
+    <div className="min-h-screen flex items-center justify-center bg-[#0d1117] px-4 relative overflow-hidden">
+      <CircularText text="LEVL7 STRESSER • SECURE AUTHENTICATION • HIGH PERFORMANCE • " />
+      
       <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-        className="w-full max-w-md relative"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
       >
-        <motion.div variants={slideRight} initial="initial" animate="animate"
-          className="bg-panel border border-border rounded-xl p-8"
-        >
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-8 shadow-sm">
           <div className="text-center mb-8">
-            <motion.img
-              variants={scaleIn} initial="initial" animate="animate"
+            <img
               src="imagens/logo.png"
               alt="Logo"
-              className="h-16 mx-auto mb-4"
+              className="h-12 mx-auto mb-4"
             />
-            <motion.h1 variants={slideLeft} initial="initial" animate="animate"
-              className="text-2xl font-bold text-white"
-            >
+            <h1 className="text-xl font-semibold text-[#e6edf3]">
               Sign In
-            </motion.h1>
-            <p className="text-text-muted mt-1 text-sm">Sign in to access all features</p>
+            </h1>
+            <p className="text-[#8b949e] mt-2 text-sm">Sign in to your account</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <motion.div variants={slideRight} initial="initial" animate="animate"
-              className="flex items-center gap-2 border border-border rounded-lg px-3 py-2.5 bg-background focus-within:border-primary/50 transition-colors"
-            >
-              <User size={18} className="text-text-muted shrink-0" />
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="w-full bg-transparent text-white placeholder-text-muted focus:outline-none text-sm"
-              />
-            </motion.div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-[#e6edf3] block">Username</label>
+              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#58a6ff] transition-colors">
+                <User size={16} className="text-[#8b949e] shrink-0" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="bg-transparent border-none outline-none text-[#e6edf3] placeholder:text-[#484f58] w-full text-sm"
+                  placeholder="Enter username"
+                />
+              </div>
+            </div>
 
-            <motion.div variants={slideLeft} initial="initial" animate="animate"
-              className="flex items-center gap-2 border border-border rounded-lg px-3 py-2.5 bg-background focus-within:border-primary/50 transition-colors"
-            >
-              <Lock size={18} className="text-text-muted shrink-0" />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full bg-transparent text-white placeholder-text-muted focus:outline-none text-sm"
-              />
-            </motion.div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-[#e6edf3] block">Password</label>
+              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#58a6ff] transition-colors">
+                <Lock size={16} className="text-[#8b949e] shrink-0" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-transparent border-none outline-none text-[#e6edf3] placeholder:text-[#484f58] w-full text-sm"
+                  placeholder="Enter password"
+                />
+              </div>
+            </div>
 
-            <motion.div variants={scaleIn} initial="initial" animate="animate">
+            <div className="pt-2">
               <MathCaptcha onVerify={setCaptchaToken} />
-            </motion.div>
+            </div>
 
-            <motion.button
+            <button
               type="submit"
               disabled={isDisabled}
-              variants={scaleIn} initial="initial" animate="animate"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              className="w-full bg-primary text-white font-medium py-2.5 rounded-lg text-sm hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="w-full bg-[#238636] text-white font-medium py-2 rounded-md text-sm hover:bg-[#2ea043] disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-4 border border-[rgba(240,246,252,0.1)]"
             >
-              {isSubmitting ? "Signing in..." : "Sign In"}
-            </motion.button>
-
-            <p className="text-center text-sm text-text-muted">
-              Don&apos;t have an account?{" "}
-              <a href="/register" className="text-primary hover:underline">Register</a>
-            </p>
+              {isSubmitting ? "Signing in..." : "Sign in"}
+            </button>
           </form>
-        </motion.div>
+
+          <div className="mt-6 text-center text-sm text-[#8b949e]">
+            Don't have an account?{" "}
+            <button onClick={() => router.push("/register")} className="text-[#58a6ff] hover:underline">
+              Create an account
+            </button>
+          </div>
+        </div>
       </motion.div>
     </div>
   );
