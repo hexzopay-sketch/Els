@@ -160,19 +160,37 @@ certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "admin@${DOMA
   warn "Certbot failed. You may need to run: certbot --nginx -d $DOMAIN"
 
 # -- Start Services --------------------------------------------------------
-# Try systemd first, fall back to direct start
-start_svc() {
-  local name="$1" cmd="$2"
-  if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
-    systemctl restart "$name" 2>/dev/null || systemctl start "$name" 2>/dev/null || true
-  else
-    nohup $cmd >/dev/null 2>&1 &
-    log "$name started directly (PID $!)"
-  fi
-}
+SERVER_BIN="$REPO_DIR/server"
+SERVER_LOG="$REPO_DIR/server.log"
 
-start_svc "nginx" "nginx"
-start_svc "$SERVICE_NAME" "$REPO_DIR/server -web $SERVER_PORT"
+# nginx: try systemd then direct
+if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+  systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
+else
+  nginx 2>/dev/null || true
+fi
+
+# Go server: try systemd then direct
+if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+  systemctl restart "$SERVICE_NAME" 2>/dev/null || systemctl start "$SERVICE_NAME" 2>/dev/null || true
+fi
+
+log "Starting Go server..."
+nohup "$SERVER_BIN" -web "$SERVER_PORT" > "$SERVER_LOG" 2>&1 &
+SERVER_PID=$!
+sleep 1
+
+if kill -0 "$SERVER_PID" 2>/dev/null && ss -tlnp 2>/dev/null | grep -q ":$SERVER_PORT "; then
+  log "Server running (PID $SERVER_PID) on port $SERVER_PORT"
+else
+  warn "Server failed to start. Check $SERVER_LOG:"
+  head -20 "$SERVER_LOG" 2>/dev/null | while IFS= read -r line; do warn "  $line"; done
+  # Last resort: try running once more with output visible
+  warn "Trying one more time with visible output..."
+  "$SERVER_BIN" -web "$SERVER_PORT" &
+  sleep 1
+  ss -tlnp | grep -q ":$SERVER_PORT " && log "Server running on try #2" || err "Server won't start. Fix manually."
+fi
 
 log "--- Installation complete ---"
 log "Domain: https://$DOMAIN"
