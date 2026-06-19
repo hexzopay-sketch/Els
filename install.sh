@@ -79,29 +79,29 @@ rm -rf cnc/out && cp -r out cnc/out
 log "Rebuilding Go server with embedded frontend..."
 cd cnc && go build -o "$REPO_DIR/server" . && cd "$REPO_DIR"
 
-# -- MQTT Setup -----------------------------------------------------------
-log "Configuring Mosquitto MQTT..."
-MQTT_PASS=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 24 | head -1)
-
-mkdir -p /etc/mosquitto/conf.d
-cat > /etc/mosquitto/conf.d/levl7.conf <<EOF
+# -- MQTT Setup (optional) -------------------------------------------------
+MQTT_PASS=""
+if command -v mosquitto_passwd &>/dev/null; then
+  log "Configuring Mosquitto MQTT..."
+  MQTT_PASS=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 24 | head -1)
+  mkdir -p /etc/mosquitto/conf.d
+  cat > /etc/mosquitto/conf.d/levl7.conf <<EOF
 listener 1883 127.0.0.1
 allow_anonymous false
 password_file /etc/mosquitto/levl7.passwd
 EOF
-
-touch /etc/mosquitto/levl7.passwd
-mosquitto_passwd -b /etc/mosquitto/levl7.passwd levl7c2 "$MQTT_PASS" || warn "mosquitto_passwd skipped (container?)"
-
-# Update MQTT password in Go source
-sed -i "s|Password: \".*\"|Password: \"${MQTT_PASS}\"|" "$REPO_DIR/cnc/mqtt.go"
-
-log "Rebuilding server with MQTT credentials..."
-(cd cnc && go build -o "$REPO_DIR/server" .) || err "Go build failed"
-
-if ! $NOSYS; then
-  systemctl enable mosquitto || warn "systemd not available (container?)"
-  systemctl restart mosquitto || warn "Could not restart mosquitto via systemd"
+  touch /etc/mosquitto/levl7.passwd
+  mosquitto_passwd -b /etc/mosquitto/levl7.passwd levl7c2 "$MQTT_PASS" 2>/dev/null && {
+    sed -i "s|Password: \".*\"|Password: \"${MQTT_PASS}\"|" "$REPO_DIR/cnc/mqtt.go"
+    (cd cnc && go build -o "$REPO_DIR/server" .) 2>/dev/null || true
+    if ! $NOSYS; then
+      systemctl enable mosquitto 2>/dev/null || true
+      systemctl restart mosquitto 2>/dev/null || true
+    fi
+    log "MQTT configured"
+  } || warn "MQTT setup skipped"
+else
+  warn "mosquitto_passwd not found — MQTT setup skipped"
 fi
 
 # -- Systemd Service ------------------------------------------------------
