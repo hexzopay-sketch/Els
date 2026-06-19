@@ -71,15 +71,10 @@ allow_anonymous false
 password_file /etc/mosquitto/levl7.passwd
 EOF
 
-# Create MQTT user (non-interactive)
-echo "levl7c2:${MQTT_PASS}" > /tmp/mqtt_creds
-mosquitto_passwd -U /tmp/mqtt_creds
-# mosquitto_passwd requires a different approach for non-interactive
-touch /etc/mosquitto/levl7.passwd
 mosquitto_passwd -b /etc/mosquitto/levl7.passwd levl7c2 "$MQTT_PASS"
 
 # Update MQTT password in Go source
-sed -i "s|Password:.*|Password: \"${MQTT_PASS}\",|" "$REPO_DIR/cnc/mqtt.go"
+sed -i "s|Password: \".*\"|Password: \"${MQTT_PASS}\"|" "$REPO_DIR/cnc/mqtt.go"
 
 log "Rebuilding server with MQTT credentials..."
 cd cnc && go build -o "$REPO_DIR/server" . && cd "$REPO_DIR"
