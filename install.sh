@@ -7,16 +7,17 @@ warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 err() { echo -e "${RED}[-]${NC} $1"; exit 1; }
 
 for arg in "$@"; do
-  [ "$arg" = "--help" ] || [ "$arg" = "-h" ] && { echo "Usage: $0 [domain] [--nosys]"; echo "  --nosys  Skip systemd service setup (just build + configure)"; exit 0; }
+  [ "$arg" = "--help" ] || [ "$arg" = "-h" ] && { echo "Usage: $0 [domain] [--cc] [--nosys]"; echo "  --cc     Codespace mode (sets --nosys, prompts to open ports)"; echo "  --nosys  Skip systemd service setup"; exit 0; }
 done
 [ $EUID -ne 0 ] && err "Run as root (sudo)."
 
 NOSYS=false
+CC=false
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --cc) CC=true; NOSYS=true; shift ;;
     --nosys) NOSYS=true; shift ;;
-
     -*)
       err "Unknown flag: $1"
       ;;
@@ -153,6 +154,19 @@ ln -sf "$NGINX_CONF" "$NGINX_ENABLED"
 rm -f /etc/nginx/sites-enabled/default
 
 nginx -t || err "Nginx config test failed."
+
+# -- Codespace: port visibility check ------------------------------------
+if $CC; then
+  echo ""
+  warn "=== Codespace: make ports public ==="
+  warn "Open these ports in your local terminal (not this one):"
+  echo ""
+  echo "  gh codespace ports visibility 80:public"
+  echo "  gh codespace ports visibility $SERVER_PORT:public"
+  echo ""
+  read -r -p "Press Enter once ports are public... "
+  log "Proceeding with SSL..."
+fi
 
 # -- SSL via Certbot -------------------------------------------------------
 log "Obtaining SSL certificate..."
