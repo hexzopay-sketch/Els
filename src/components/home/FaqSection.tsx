@@ -5,9 +5,9 @@ import { ChevronDown } from "lucide-react";
 
 const faqs = [
   {
-    question: "What is LevL7 Stresser?",
+    question: "What is EL7Stresser?",
     answer:
-      "LevL7 Stresser is a high-performance stress testing platform that allows you to test the resilience of your infrastructure under intense simulated traffic.",
+      "EL7Stresser is a high-performance stress testing platform that allows you to test the resilience of your infrastructure under intense simulated traffic.",
   },
   {
     question: "What payment methods are available?",

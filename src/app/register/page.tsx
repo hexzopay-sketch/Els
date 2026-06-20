@@ -57,7 +57,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0d1117] px-4 relative overflow-hidden">
-      <CircularText text="LEVL7 STRESSER • CREATE ACCOUNT • SECURE NETWORK • " />
+      <CircularText text="EL7STRESSER • CREATE ACCOUNT • SECURE NETWORK • " />
       
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -81,7 +81,7 @@ export default function RegisterPage() {
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-1">
               <label className="text-sm font-medium text-[#e6edf3] block">Username</label>
-              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#58a6ff] transition-colors">
+              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#e6edf3] transition-colors">
                 <User size={16} className="text-[#8b949e] shrink-0" />
                 <input
                   type="text"
@@ -95,7 +95,7 @@ export default function RegisterPage() {
 
             <div className="space-y-1">
               <label className="text-sm font-medium text-[#e6edf3] block">Email</label>
-              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#58a6ff] transition-colors">
+              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#e6edf3] transition-colors">
                 <Mail size={16} className="text-[#8b949e] shrink-0" />
                 <input
                   type="email"
@@ -109,7 +109,7 @@ export default function RegisterPage() {
 
             <div className="space-y-1">
               <label className="text-sm font-medium text-[#e6edf3] block">Password</label>
-              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#58a6ff] transition-colors">
+              <div className="flex items-center gap-3 border border-[#30363d] rounded-md px-3 py-2 bg-[#0d1117] focus-within:border-[#e6edf3] transition-colors">
                 <Lock size={16} className="text-[#8b949e] shrink-0" />
                 <input
                   type="password"
@@ -136,7 +136,7 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center text-sm text-[#8b949e]">
             Already have an account?{" "}
-            <button onClick={() => router.push("/login")} className="text-[#58a6ff] hover:underline">
+            <button onClick={() => router.push("/login")} className="text-[#e6edf3] hover:underline">
               Sign in
             </button>
           </div>

@@ -62,7 +62,7 @@ export default function AdminPanel() {
                       />
                     )}
                     <span className="relative z-10 flex items-center gap-3">
-                      <Icon size={16} className={isActive ? "text-[#58a6ff]" : "text-[#8b949e]"} />
+                      <Icon size={16} className={isActive ? "text-[#e6edf3]" : "text-[#8b949e]"} />
                       {tab.label}
                     </span>
                   </button>

@@ -47,7 +47,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         >
                             {toast.type === "success" && <CheckCircle size={18} className="text-green-200" />}
                             {toast.type === "error" && <XCircle size={18} className="text-red-200" />}
-                            {toast.type === "info" && <Info size={18} className="text-blue-200" />}
+                            {toast.type === "info" && <Info size={18} className="text-gray-200" />}
                             <span>{toast.message}</span>
                         </motion.div>
                     ))}

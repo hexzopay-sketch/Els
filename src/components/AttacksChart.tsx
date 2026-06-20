@@ -29,14 +29,14 @@ export default function AttacksChart({ data }: { data: AttackData[] }) {
         <AreaChart data={data}>
           <defs>
             <linearGradient id="attacksGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#58a6ff" stopOpacity={0.25} />
-              <stop offset="95%" stopColor="#58a6ff" stopOpacity={0} />
+              <stop offset="5%" stopColor="#e6edf3" stopOpacity={0.25} />
+              <stop offset="95%" stopColor="#e6edf3" stopOpacity={0} />
             </linearGradient>
           </defs>
           <XAxis dataKey="name" stroke="#8b949e" tick={{ fill: "#8b949e", fontSize: 11 }} axisLine={false} tickLine={false} />
           <YAxis stroke="#8b949e" tick={{ fill: "#8b949e", fontSize: 11 }} axisLine={false} tickLine={false} />
           <Tooltip content={<CustomTooltip />} />
-          <Area type="monotone" dataKey="attacks" stroke="#58a6ff" strokeWidth={2} fill="url(#attacksGradient)" name="Attacks" />
+          <Area type="monotone" dataKey="attacks" stroke="#e6edf3" strokeWidth={2} fill="url(#attacksGradient)" name="Attacks" />
         </AreaChart>
       </ResponsiveContainer>
     </div>

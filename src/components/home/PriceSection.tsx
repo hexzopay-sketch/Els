@@ -1,56 +1,39 @@
 "use client";
 import { motion } from "motion/react";
+import { useState, useEffect } from "react";
 import { Zap, Clock, Star, Server } from "lucide-react";
 
-const plans = [
-  {
-    title: "Starter",
-    price: "$9.99",
-    features: [
-      { icon: <Zap size={16} />, label: "1 concurrents" },
-      { icon: <Clock size={16} />, label: "120 seconds" },
-      { icon: <Star size={16} />, label: "Premium access", included: false },
-      { icon: <Server size={16} />, label: "API Access", included: false },
-    ],
-  },
-  {
-    title: "Standard",
-    price: "$19.99",
-    features: [
-      { icon: <Zap size={16} />, label: "2 concurrents" },
-      { icon: <Clock size={16} />, label: "300 seconds" },
-      { icon: <Star size={16} />, label: "Premium access", included: false },
-      { icon: <Server size={16} />, label: "API Access", included: true },
-    ],
-  },
-  {
-    title: "Advanced",
-    price: "$39.99",
-    features: [
-      { icon: <Zap size={16} />, label: "3 concurrents" },
-      { icon: <Clock size={16} />, label: "600 seconds" },
-      { icon: <Star size={16} />, label: "Premium access", included: true },
-      { icon: <Server size={16} />, label: "API Access", included: true },
-    ],
-  },
-  {
-    title: "Enterprise",
-    price: "$79.99",
-    features: [
-      { icon: <Zap size={16} />, label: "6 concurrents" },
-      { icon: <Clock size={16} />, label: "1200 seconds" },
-      { icon: <Star size={16} />, label: "Premium access", included: true },
-      { icon: <Server size={16} />, label: "API Access", included: true },
-    ],
-  },
-];
+interface Plan {
+  name: string;
+  max_concurrents: number;
+  max_seconds: number;
+  premium: boolean;
+  api_access: boolean;
+}
+
+const prices: Record<string, string> = {
+  Starter: "$9.99",
+  Standard: "$19.99",
+  Advanced: "$39.99",
+  Enterprise: "$79.99",
+};
 
 export function PriceSection() {
+  const [plans, setPlans] = useState<Plan[]>([]);
+
+  useEffect(() => {
+    fetch("/api/v1/plans")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setPlans(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  if (plans.length === 0) return null;
+
   return (
-    <section
-      id="section-plan"
-      className="w-full max-w-6xl mx-auto py-16 px-4 md:px-8"
-    >
+    <section className="w-full max-w-6xl mx-auto py-16 px-4 md:px-8">
       <motion.h2
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -64,34 +47,27 @@ export function PriceSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {plans.map((plan, idx) => (
           <motion.div
-            key={plan.title}
+            key={plan.name}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.15, duration: 0.6 }}
             viewport={{ once: true }}
-            className="bg-panel border border-primary/20 shadow-lg p-6 rounded-xl text-center hover:shadow-xl transition"
+            className="group relative bg-panel border border-border rounded-xl p-6 text-center overflow-hidden"
           >
-            <h3 className="text-xl font-bold text-white mb-2">{plan.title}</h3>
-            <p className="text-3xl font-extrabold text-primary mb-6">{plan.price}</p>
-            <ul className="space-y-3 text-sm text-text mb-6">
-              {plan.features.map((f, i) => {
-                const isSpecial = f.label === "Premium access" || f.label === "API Access";
-                let className = "flex items-center justify-center gap-2";
-
-                if (isSpecial) {
-                  className += f.included
-                    ? " underline decoration-green-500 decoration-2 underline-offset-[6px]"
-                    : " line-through decoration-red-500 decoration-2";
-                }
-
-                return (
-                  <li key={i} className={className}>
-                    {f.icon} {f.label}
-                  </li>
-                );
-              })}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <h3 className="text-xl font-bold text-white mb-2 relative">{plan.name}</h3>
+            <p className="text-3xl font-extrabold text-primary mb-6 relative">{prices[plan.name] || "—"}</p>
+            <ul className="space-y-3 text-sm text-text-muted mb-6 relative">
+              <li className="flex items-center justify-center gap-2"><Zap size={16} />{plan.max_concurrents} concurrents</li>
+              <li className="flex items-center justify-center gap-2"><Clock size={16} />{plan.max_seconds} seconds</li>
+              <li className={`flex items-center justify-center gap-2 ${plan.premium ? "underline decoration-green-500 decoration-2 underline-offset-[6px]" : "line-through decoration-red-500 decoration-2"}`}>
+                <Star size={16} /> Premium access
+              </li>
+              <li className={`flex items-center justify-center gap-2 ${plan.api_access ? "underline decoration-green-500 decoration-2 underline-offset-[6px]" : "line-through decoration-red-500 decoration-2"}`}>
+                <Server size={16} /> API Access
+              </li>
             </ul>
-            <button className="w-full mt-auto bg-primary text-white font-semibold py-2 rounded-md hover:bg-primary/80 transition">
+            <button className="w-full mt-auto bg-primary text-background font-semibold py-2 rounded-md hover:brightness-110 transition-all relative">
               Select Plan
             </button>
           </motion.div>

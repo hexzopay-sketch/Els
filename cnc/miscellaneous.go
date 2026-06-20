@@ -51,6 +51,7 @@ type User struct {
 	JoinDate       string `json:"join_date"`
 	ExpirationDate string `json:"expiration_date"`
 	MaxConcurrents int    `json:"max_concurrents"`
+	MaxOngoing     int    `json:"max_ongoing"`
 	MaxSeconds     int    `json:"max_seconds"`
 	APIKey         string `json:"api_key"`
 	AvatarURL      string `json:"avatar_url"`
@@ -59,6 +60,7 @@ type User struct {
 type Plan struct {
 	Name           string `json:"name"`
 	MaxConcurrents int    `json:"max_concurrents"`
+	MaxOngoing     int    `json:"max_ongoing"`
 	MaxSeconds     int    `json:"max_seconds"`
 	MinSeconds     int    `json:"min_seconds"`
 	Premium        bool   `json:"premium"`

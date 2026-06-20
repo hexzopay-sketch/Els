@@ -188,33 +188,47 @@ export default function StressMethods() {
         </h3>
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          className="flex flex-col gap-4"
         >
-          <div>
-            <label className="block text-text-muted text-xs mb-1 uppercase tracking-wider">Method Name</label>
-            <input
-              type="text"
-              placeholder="e.g. HTTP-FLOOD"
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              required
-              disabled={isEditing}
-              className="w-full bg-muted border border-border rounded-lg px-4 py-2 text-white placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-          <div>
-            <label className="block text-text-muted text-xs mb-1 uppercase tracking-wider">Description</label>
-            <input
-              type="text"
-              placeholder="What this method does"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              className="w-full bg-muted border border-border rounded-lg px-4 py-2 text-white placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-text-muted text-xs mb-1 uppercase tracking-wider">Method Name</label>
+              <input
+                type="text"
+                placeholder="e.g. HTTP-FLOOD"
+                value={method}
+                onChange={(e) => setMethod(e.target.value)}
+                required
+                disabled={isEditing}
+                className="w-full bg-muted border border-border rounded-lg px-4 py-2 text-white placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-text-muted text-xs mb-1 uppercase tracking-wider">Description</label>
+              <input
+                type="text"
+                placeholder="What this method does"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                className="w-full bg-muted border border-border rounded-lg px-4 py-2 text-white placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-text-muted text-xs mb-1 uppercase tracking-wider">Concurrent Threads</label>
+              <input
+                type="number"
+                placeholder="1"
+                value={concurrents}
+                onChange={(e) => setConcurrents(parseInt(e.target.value) || 1)}
+                min="1"
+                className="w-full bg-muted border border-border rounded-lg px-4 py-2 text-white placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <p className="text-text-muted text-[10px] mt-1">Number of threads/connections per attack</p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 md:col-span-2 lg:col-span-2">
+          <div className="flex flex-wrap gap-3">
             <Checkbox checked={layer4} onChange={() => setLayer4(!layer4)} label="Layer 4 (network/transport attacks)" />
             <Checkbox checked={layer7} onChange={() => setLayer7(!layer7)} label="Layer 7 (application attacks)" />
             <Checkbox checked={amplification} onChange={() => setAmplification(!amplification)} label="Amplification (reflection)" />
@@ -222,23 +236,10 @@ export default function StressMethods() {
             <Checkbox checked={proxy} onChange={() => setProxy(!proxy)} label="Proxy (route through proxy)" />
           </div>
 
-          <div>
-            <label className="block text-text-muted text-xs mb-1 uppercase tracking-wider">Concurrent Threads</label>
-            <input
-              type="number"
-              placeholder="1"
-              value={concurrents}
-              onChange={(e) => setConcurrents(parseInt(e.target.value) || 1)}
-              min="1"
-              className="w-full bg-muted border border-border rounded-lg px-4 py-2 text-white placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <p className="text-text-muted text-[10px] mt-1">Number of parallel threads (default: 1)</p>
-          </div>
-
-          <div className="flex gap-2 md:col-span-2 lg:col-span-3">
+          <div className="flex gap-2">
             <button
               type="submit"
-              className="flex-1 bg-primary text-white rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-blue-700 transition"
+              className="flex-1 bg-primary text-background rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:brightness-110 transition"
             >
               <Plus size={18} />
               {isEditing ? "Update" : "Add"}
@@ -247,7 +248,7 @@ export default function StressMethods() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-muted transition"
+                className="px-4 py-2 bg-primary text-background rounded-lg hover:bg-muted transition"
               >
                 Cancel
               </button>

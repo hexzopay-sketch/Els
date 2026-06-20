@@ -12,7 +12,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LevL7 Stresser",
+  title: "EL7Stresser",
   description: "High-Performance IP Stresser & Load Testing Tool",
   icons: "imagens/logo.png"
 };

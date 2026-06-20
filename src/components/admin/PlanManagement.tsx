@@ -9,6 +9,7 @@ import Checkbox from "@/components/Checkbox";
 interface Plan {
   name: string;
   max_concurrents: number;
+  max_ongoing: number;
   max_seconds: number;
   min_seconds: number;
   premium: boolean;
@@ -33,6 +34,7 @@ export default function PlanManagement() {
   // Form states
   const [name, setName] = useState("");
   const [maxConcurrents, setMaxConcurrents] = useState(1);
+  const [maxOngoing, setMaxOngoing] = useState(1);
   const [maxSeconds, setMaxSeconds] = useState(60);
   const [minSeconds, setMinSeconds] = useState(10);
   const [premium, setPremium] = useState(false);
@@ -54,6 +56,7 @@ export default function PlanManagement() {
   const resetForm = () => {
     setName("");
     setMaxConcurrents(1);
+    setMaxOngoing(1);
     setMaxSeconds(60);
     setMinSeconds(10);
     setPremium(false);
@@ -81,6 +84,7 @@ export default function PlanManagement() {
       const planData = {
         name: name.trim(),
         max_concurrents: maxConcurrents,
+        max_ongoing: maxOngoing,
         max_seconds: maxSeconds,
         min_seconds: minSeconds,
         premium,
@@ -110,6 +114,7 @@ export default function PlanManagement() {
   const handleEdit = (plan: Plan) => {
     setName(plan.name);
     setMaxConcurrents(plan.max_concurrents);
+    setMaxOngoing(plan.max_ongoing || 1);
     setMaxSeconds(plan.max_seconds);
     setMinSeconds(plan.min_seconds);
     setPremium(plan.premium);
@@ -117,6 +122,7 @@ export default function PlanManagement() {
     setIsEditing(true);
     setEditingPlanName(plan.name);
     setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (planName: string) => {
@@ -207,6 +213,16 @@ export default function PlanManagement() {
 
           <input
             type="number"
+            placeholder="Max Ongoing Attacks"
+            value={maxOngoing}
+            min={1}
+            onChange={(e) => setMaxOngoing(Number(e.target.value))}
+            required
+            className="bg-muted border border-border rounded-lg px-4 py-2 text-white placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+
+          <input
+            type="number"
             placeholder="Max Seconds"
             value={maxSeconds}
             min={1}
@@ -231,7 +247,7 @@ export default function PlanManagement() {
           <div className="flex gap-2 md:col-span-2 lg:col-span-3">
             <button
               type="submit"
-              className="flex-1 bg-primary text-white rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-blue-700 transition"
+              className="flex-1 bg-primary text-background rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:brightness-110 transition"
             >
               <Plus size={18} />
               {isEditing ? "Update" : "Add"}
@@ -241,7 +257,7 @@ export default function PlanManagement() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-muted transition"
+                className="px-4 py-2 bg-primary text-background rounded-lg hover:bg-muted transition"
               >
                 Cancel
               </button>
@@ -257,6 +273,7 @@ export default function PlanManagement() {
             <tr>
               <th className="px-4 py-3">Plan Name</th>
               <th className="px-4 py-3">Max Concurrents</th>
+              <th className="px-4 py-3">Max Ongoing</th>
               <th className="px-4 py-3">Max Seconds</th>
               <th className="px-4 py-3">Min Seconds</th>
               <th className="px-4 py-3">Premium</th>
@@ -267,7 +284,7 @@ export default function PlanManagement() {
           <tbody>
             {plans.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-4 text-gray-500">
+                <td colSpan={8} className="text-center py-4 text-gray-500">
                   No plans found.
                 </td>
               </tr>
@@ -279,6 +296,7 @@ export default function PlanManagement() {
               >
                 <td className="px-4 py-2">{plan.name}</td>
                 <td className="px-4 py-2">{plan.max_concurrents}</td>
+                <td className="px-4 py-2">{plan.max_ongoing || 1}</td>
                 <td className="px-4 py-2">{plan.max_seconds}</td>
                 <td className="px-4 py-2">{plan.min_seconds}</td>
                 <td className="px-4 py-2">{plan.premium ? "Yes" : "No"}</td>

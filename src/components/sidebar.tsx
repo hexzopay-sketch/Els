@@ -62,7 +62,7 @@ export function Sidebar() {
                                             onClick={toggleSidebar}
                                             className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                                                 pathname === href
-                                                    ? "bg-[#58a6ff]/10 text-[#58a6ff]"
+                                                    ? "bg-[#e6edf3]/10 text-[#e6edf3]"
                                                     : "text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]/50"
                                             }`}
                                         >
@@ -96,28 +96,27 @@ export function Sidebar() {
                 )}
             </AnimatePresence>
 
-            {/* Desktop sidebar */}
-            <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-16 bg-[#161b22] border-r border-[#30363d] flex-col items-center py-4 gap-2">
-                {isLogged ? (
-                    filtered.map(({ href, icon, label }) => (
+            {isLogged && (
+                <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-16 bg-[#161b22] border-r border-[#30363d] flex-col items-center py-4 gap-2">
+                    {filtered.map((item) => (
                         <Link
-                            key={href}
-                            href={href}
+                            key={item.href}
+                            href={item.href}
                             className={`group relative flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 ${
-                                pathname === href
-                                    ? "bg-[#58a6ff]/10 text-[#58a6ff]"
+                                pathname === item.href
+                                    ? "bg-[#e6edf3]/10 text-[#e6edf3]"
                                     : "text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]/50"
                             }`}
-                            title={label}
+                            title={item.label}
                         >
-                            {icon}
+                            {item.icon}
                             <span className="absolute left-14 px-2 py-1 bg-[#21262d] border border-[#30363d] text-xs text-[#e6edf3] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                {label}
+                                {item.label}
                             </span>
                         </Link>
-                    ))
-                ) : null}
-            </aside>
+                    ))}
+                </aside>
+            )}
         </>
     );
 }

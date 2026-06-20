@@ -2,7 +2,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import LoginPage from "@/app/login/page";
+import { HeroSection } from "@/components/home/HeroSection";
+import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { MethodsSection } from "@/components/home/MethodsSection";
+import { PriceSection } from "@/components/home/PriceSection";
+import { FAQSection } from "@/components/home/FaqSection";
+import { Footer } from "@/components/home/Footer";
 
 export default function Home() {
   const { isLogged, isLoading } = useAuth();
@@ -18,5 +23,14 @@ export default function Home() {
     return null;
   }
 
-  return <LoginPage />;
+  return (
+    <>
+      <HeroSection />
+      <FeaturesSection />
+      <MethodsSection />
+      <PriceSection />
+      <FAQSection />
+      <Footer />
+    </>
+  );
 }

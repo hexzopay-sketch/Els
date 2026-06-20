@@ -83,7 +83,7 @@ export default function BroadcastManagement() {
         <h2 className="text-sm font-semibold text-white">Broadcasts</h2>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-md hover:bg-primary/80 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-background text-xs font-medium rounded-md hover:bg-primary/80 transition-colors"
         >
           <Plus size={14} />
           Add Broadcast
@@ -140,7 +140,7 @@ export default function BroadcastManagement() {
                 <button
                   onClick={handleCreate}
                   disabled={!text.trim()}
-                  className="flex-1 py-2 bg-primary text-white text-xs font-medium rounded-md hover:bg-primary/80 disabled:opacity-40 transition-colors"
+                  className="flex-1 py-2 bg-primary text-background text-xs font-medium rounded-md hover:bg-primary/80 disabled:opacity-40 transition-colors"
                 >
                   Publish
                 </button>

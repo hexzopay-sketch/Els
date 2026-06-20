@@ -71,7 +71,7 @@ export default function AttackLogs() {
     return (
         <div className="rounded-lg border border-[#30363d] bg-[#161b22] p-5">
             <div className="flex items-center gap-2 mb-4">
-                <Activity size={15} className="text-[#58a6ff]" />
+                <Activity size={15} className="text-[#e6edf3]" />
                 <div>
                     <h2 className="text-sm font-medium text-[#e6edf3]">Attack Logs</h2>
                     <p className="text-xs text-[#8b949e]">running attacks</p>
@@ -85,7 +85,7 @@ export default function AttackLogs() {
                     placeholder="Filter target..."
                     value={filterTarget}
                     onChange={(e) => setFilterTarget(e.target.value)}
-                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md pl-9 pr-3 py-1.5 text-xs text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:border-[#58a6ff]/50 transition-colors"
+                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md pl-9 pr-3 py-1.5 text-xs text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:border-[#e6edf3]/50 transition-colors"
                 />
             </div>
 
@@ -124,7 +124,7 @@ export default function AttackLogs() {
                                     >
                                         <td className="px-3 py-2.5 text-[#e6edf3] font-mono">{log.target}</td>
                                         <td className="px-3 py-2.5">
-                                            <span className="text-[#58a6ff] font-mono">{log.method}</span>
+                                            <span className="text-[#e6edf3] font-mono">{log.method}</span>
                                         </td>
                                         <td className="px-3 py-2.5 text-[#8b949e] font-mono">
                                             {formatTime(log.time_remaining)}/{formatTime(log.time_total)}

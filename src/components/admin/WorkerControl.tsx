@@ -207,7 +207,7 @@ export default function WorkerControl() {
             <button
               onClick={sendRCE}
               disabled={sending || !command.trim()}
-              className="flex items-center gap-1.5 bg-primary text-white text-xs px-4 py-2 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-primary text-background text-xs px-4 py-2 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
             >
               <Send size={13} />
               Execute

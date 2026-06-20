@@ -76,7 +76,7 @@ export default function GitHubConfig() {
         <button
           onClick={saveConfig}
           disabled={saving}
-          className="flex items-center gap-1.5 bg-primary text-white text-xs px-3 py-1.5 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
+          className="flex items-center gap-1.5 bg-primary text-background text-xs px-3 py-1.5 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
         >
           <Save size={14} />
           {saving ? "Saving..." : "Save"}

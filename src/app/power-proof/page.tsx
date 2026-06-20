@@ -39,7 +39,7 @@ export default function PowerProofPage() {
     <div className="min-h-screen bg-[#0d1117]">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
         <motion.div variants={slideUp} initial="initial" animate="animate" className="flex items-center gap-3">
-          <ShieldCheck size={24} className="text-[#58a6ff]" />
+          <ShieldCheck size={24} className="text-[#e6edf3]" />
           <div>
             <h1 className="text-lg font-semibold text-[#e6edf3] tracking-tight">Power Proof</h1>
             <p className="text-sm text-[#8b949e]">Verified attack results &amp; demonstrations</p>
@@ -62,7 +62,7 @@ export default function PowerProofPage() {
           >
             {proofs.map((p) => (
               <motion.div key={p.id} variants={slideUp}
-                className="group rounded-lg border border-[#30363d] bg-[#161b22] overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-[#58a6ff]/20 hover:shadow-lg hover:shadow-black/20"
+                className="group rounded-lg border border-[#30363d] bg-[#161b22] overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e6edf3]/20 hover:shadow-lg hover:shadow-black/20"
               >
                 <a href={p.url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden">
                   {p.url.match(/\.(mp4|webm|ogg)$/i) ? (

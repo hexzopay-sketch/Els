@@ -205,7 +205,7 @@ export default function ServerManagement() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 bg-primary text-white text-xs px-3 py-1.5 rounded-md hover:brightness-110 transition-all"
+          className="flex items-center gap-1.5 bg-primary text-background text-xs px-3 py-1.5 rounded-md hover:brightness-110 transition-all"
         >
           <Plus size={14} />
           Add Server
@@ -374,7 +374,7 @@ export default function ServerManagement() {
             <button
               onClick={sendRCE}
               disabled={sending || !command.trim()}
-              className="flex items-center gap-1.5 bg-primary text-white text-xs px-4 py-2 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-primary text-background text-xs px-4 py-2 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
             >
               <Send size={13} />
               Execute
@@ -539,7 +539,7 @@ export default function ServerManagement() {
                     value={newIp}
                     onChange={(e) => setNewIp(e.target.value)}
                     placeholder="0.0.0.0"
-                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-white placeholder-text-muted focus:outline-none focus:border-[#58a6ff]/50"
+                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-white placeholder-text-muted focus:outline-none focus:border-[#e6edf3]/50"
                   />
                 </div>
                 <div>
@@ -547,7 +547,7 @@ export default function ServerManagement() {
                   <select
                     value={newArch}
                     onChange={(e) => setNewArch(e.target.value)}
-                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-[#58a6ff]/50"
+                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e6edf3]/50"
                   >
                     <option value="x86_64">x86_64</option>
                     <option value="aarch64">aarch64</option>
@@ -561,7 +561,7 @@ export default function ServerManagement() {
                     value={newCpu}
                     onChange={(e) => setNewCpu(Number(e.target.value))}
                     min={1}
-                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-[#58a6ff]/50"
+                    className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e6edf3]/50"
                   />
                 </div>
               </div>
@@ -575,7 +575,7 @@ export default function ServerManagement() {
                 <button
                   onClick={addServer}
                   disabled={!newIp}
-                  className="bg-primary text-white text-xs px-4 py-1.5 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
+                  className="bg-primary text-background text-xs px-4 py-1.5 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
                 >
                   Add
                 </button>
@@ -615,7 +615,7 @@ export default function ServerManagement() {
                 <select
                   value={workerType}
                   onChange={(e) => setWorkerType(e.target.value)}
-                  className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-[#58a6ff]/50"
+                  className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e6edf3]/50"
                 >
                   <option value="node">Node.js (npm module)</option>
                   <option value="binary">Go binary</option>
@@ -631,7 +631,7 @@ export default function ServerManagement() {
                 <button
                   onClick={handleInject}
                   disabled={injecting !== null}
-                  className="flex items-center gap-1.5 bg-primary text-white text-xs px-4 py-1.5 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
+                  className="flex items-center gap-1.5 bg-primary text-background text-xs px-4 py-1.5 rounded-md hover:brightness-110 transition-all disabled:opacity-50"
                 >
                   {injecting ? <Loader2 size={12} className="animate-spin" /> : null}
                   {injecting ? "Injecting..." : "Inject"}

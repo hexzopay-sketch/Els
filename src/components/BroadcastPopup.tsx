@@ -99,7 +99,7 @@ export default function BroadcastPopup() {
               )}
               <button
                 onClick={dismiss}
-                className="w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors"
+                className="w-full py-2 bg-primary text-background text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors"
               >
                 OK
               </button>
@@ -112,7 +112,7 @@ export default function BroadcastPopup() {
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 80, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="fixed top-4 right-4 z-[100] flex items-start gap-3 px-5 py-4 rounded-xl shadow-2xl border text-sm bg-primary/90 border-primary/50 text-white max-w-sm"
+          className="fixed top-4 right-4 z-[100] flex items-start gap-3 px-5 py-4 rounded-xl shadow-2xl border text-sm bg-[#0891b2]/90 border-[#0891b2]/50 text-white max-w-sm"
           onClick={dismiss}
         >
           <Megaphone size={18} className="shrink-0 mt-0.5 text-white/80" />

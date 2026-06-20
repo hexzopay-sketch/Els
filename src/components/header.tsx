@@ -48,7 +48,7 @@ export function Header() {
                     <Link href="/" className="flex items-center gap-2">
                         <img src="imagens/logo.png" alt="Logo" className="h-8 w-auto" />
                         <span className="font-bold text-sm tracking-wide text-[#e6edf3] hidden sm:block">
-                            LEVL7<span className="text-[#58a6ff]">STRESSER</span>
+                            EL7<span className="text-[#e6edf3]">STRESSER</span>
                         </span>
                     </Link>
                 </div>
@@ -88,7 +88,7 @@ export function Header() {
                             </Link>
                             <Link
                                 href="/register"
-                                className="text-xs font-medium bg-[#58a6ff] text-white px-3 py-1.5 rounded-md hover:brightness-110 transition-all"
+                                className="text-xs font-medium bg-[#e6edf3] text-background px-3 py-1.5 rounded-md hover:brightness-110 transition-all"
                             >
                                 Register
                             </Link>

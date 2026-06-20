@@ -63,7 +63,7 @@ export default function AuthTransition({ isVisible, type, onComplete }: AuthTran
                         style={{
                           left: `calc(50% + ${Math.cos(rad) * radius}px - 6px)`,
                           top: `calc(50% + ${Math.sin(rad) * radius}px - 6px)`,
-                          backgroundColor: i % 2 === 0 ? "#58a6ff" : "#ffffff",
+                          backgroundColor: i % 2 === 0 ? "#e6edf3" : "#ffffff",
                           boxShadow: "0 0 8px rgba(88,166,255,0.6)",
                         }}
                         animate={{
@@ -105,7 +105,7 @@ export default function AuthTransition({ isVisible, type, onComplete }: AuthTran
                       transition={{ duration: 0.5, ease: "easeIn" }}
                       className="absolute w-3 h-3 rounded-full"
                       style={{
-                        backgroundColor: "#58a6ff",
+                        backgroundColor: "#e6edf3",
                         boxShadow: "0 0 10px rgba(88,166,255,0.8)",
                       }}
                     />
@@ -135,7 +135,7 @@ export default function AuthTransition({ isVisible, type, onComplete }: AuthTran
                       }}
                       transition={{ duration: 0.55, ease: "easeOut" }}
                       className="absolute w-3 h-3 rounded-full"
-                      style={{ backgroundColor: "#58a6ff" }}
+                      style={{ backgroundColor: "#e6edf3" }}
                     />
                   );
                 })}
@@ -159,9 +159,9 @@ export default function AuthTransition({ isVisible, type, onComplete }: AuthTran
                 transition={{ type: "spring", damping: 15, stiffness: 200 }}
                 className="flex flex-col items-center gap-4"
               >
-                <img src="imagens/logo.png" alt="Logo" className="w-24 h-24 drop-shadow-[0_0_15px_rgba(88,166,255,0.5)]" />
+                <img src="imagens/logo.png" alt="Logo" className="w-24 h-24 drop-shadow-[0_0_15px_rgba(230,237,243,0.5)]" />
                 <span className="text-2xl font-bold tracking-widest text-white">
-                  LEVL7<span className="text-[#58a6ff]">STRESSER</span>
+                  EL7<span className="text-[#e6edf3]">STRESSER</span>
                 </span>
               </motion.div>
             )}

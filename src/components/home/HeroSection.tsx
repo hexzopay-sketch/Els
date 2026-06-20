@@ -27,7 +27,7 @@ export function HeroSection() {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="text-lg md:text-xl max-w-2xl text-text mb-6"
                 >
-                    Unlock the full potential of your infrastructure with{" "}<span className="font-semibold">LevL7</span>
+                    Unlock the full potential of your infrastructure with{" "}<span className="font-semibold">EL7</span>
                     <span className="text-primary font-semibold">Stresser</span>. Our enterprise-grade stress testing platform delivers unmatched power, real-time control, and precision targeting — built for serious infrastructure testing. No delays, no limits.
                 </motion.p>
 
@@ -39,7 +39,7 @@ export function HeroSection() {
                 >
                     <a
                         href="/dashboard"
-                        className="px-6 py-2 rounded-lg font-semibold border-2 border-primary hover:bg-primary hover:text-white hover:shadow-md hover:scale-105 transition-all duration-300"
+                        className="px-6 py-2 rounded-lg font-semibold border-2 border-primary hover:bg-primary hover:text-background hover:shadow-md hover:scale-105 transition-all duration-300"
                     >
                         Get Started
                     </a>

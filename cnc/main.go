@@ -16,7 +16,7 @@ func main() {
 	mux := NewWebMux()
 
 	addr := fmt.Sprintf(":%s", *webPort)
-	log.Printf("[LEVL7] Web panel starting on %s", addr)
+	log.Printf("[EL7] Web panel starting on %s", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatal(err)
 	}

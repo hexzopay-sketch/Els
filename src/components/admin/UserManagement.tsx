@@ -337,7 +337,7 @@ export default function UserManagement() {
           <div className="flex gap-2 md:col-span-2 lg:col-span-3">
             <button
               type="submit"
-              className="flex-1 bg-primary text-white rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-blue-700 transition"
+              className="flex-1 bg-primary text-background rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:brightness-110 transition"
             >
               <Plus size={18} />
               {isEditing ? "Update" : "Add"}
@@ -346,7 +346,7 @@ export default function UserManagement() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-muted transition"
+                className="px-4 py-2 bg-primary text-background rounded-lg hover:bg-muted transition"
               >
                 Cancel
               </button>

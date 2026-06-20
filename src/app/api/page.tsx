@@ -49,7 +49,7 @@ const endpoints = [
 
 const methodColors: Record<string, string> = {
   GET: "text-[#3fb950]",
-  POST: "text-[#58a6ff]",
+  POST: "text-[#e6edf3]",
   PUT: "text-[#d29922]",
   PATCH: "text-[#d29922]",
   DELETE: "text-[#f85149]",
@@ -84,10 +84,10 @@ curl -X POST ${baseURL}/launch \\
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
         <motion.div variants={slideUp} initial="initial" animate="animate">
           <div className="flex items-center gap-3 mb-1">
-            <Terminal size={20} className="text-[#58a6ff]" />
+            <Terminal size={20} className="text-[#e6edf3]" />
             <h1 className="text-lg font-semibold text-[#e6edf3] tracking-tight">API v1 Reference</h1>
           </div>
-          <p className="text-sm text-[#8b949e]">Base URL: <code className="text-[#58a6ff] bg-[#161b22] px-1.5 py-0.5 rounded text-xs">{baseURL}</code></p>
+          <p className="text-sm text-[#8b949e]">Base URL: <code className="text-[#e6edf3] bg-[#161b22] px-1.5 py-0.5 rounded text-xs">{baseURL}</code></p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -109,7 +109,7 @@ curl -X POST ${baseURL}/launch \\
                   <tbody>
                     {fields.map((item, i) => (
                       <tr key={i} className="border-t border-[#30363d]/50 hover:bg-[#161b22]/50 transition-colors">
-                        <td className="px-3 py-2.5"><code className="text-[#58a6ff] text-xs font-mono">{item.field}</code></td>
+                        <td className="px-3 py-2.5"><code className="text-[#e6edf3] text-xs font-mono">{item.field}</code></td>
                         <td className="px-3 py-2.5 text-[#8b949e] text-xs">{item.description}</td>
                         <td className="px-3 py-2.5 text-[#8b949e] text-xs max-w-[200px] truncate">{item.value}</td>
                         <td className="px-3 py-2.5">{item.required ? <span className="text-[#3fb950] text-xs">Yes</span> : <span className="text-[#8b949e] text-xs">No</span>}</td>
@@ -127,7 +127,7 @@ curl -X POST ${baseURL}/launch \\
                 <div className="border-t border-[#30363d] px-4 py-2 flex justify-end">
                   <button
                     onClick={() => copyToClipboard(curlExample, "curl")}
-                    className="flex items-center gap-1.5 text-xs text-[#8b949e] hover:text-[#58a6ff] transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-[#8b949e] hover:text-[#e6edf3] transition-colors"
                   >
                     <Copy size={12} />
                     {copied === "curl" ? "Copied!" : "Copy"}
@@ -180,11 +180,11 @@ curl -X POST ${baseURL}/launch \\
               <p className="text-xs text-[#8b949e]">Use Bearer token in the Authorization header:</p>
               {apiKey ? (
                 <div className="flex items-center gap-2 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2">
-                  <Key size={14} className="text-[#58a6ff] shrink-0" />
-                  <code className="text-xs text-[#58a6ff] font-mono flex-1 truncate">{apiKey}</code>
+                  <Key size={14} className="text-[#e6edf3] shrink-0" />
+                  <code className="text-xs text-[#e6edf3] font-mono flex-1 truncate">{apiKey}</code>
                   <button
                     onClick={() => copyToClipboard(apiKey, "api-key")}
-                    className="flex items-center gap-1 text-xs text-[#8b949e] hover:text-[#58a6ff] transition-colors shrink-0"
+                    className="flex items-center gap-1 text-xs text-[#8b949e] hover:text-[#e6edf3] transition-colors shrink-0"
                   >
                     <Copy size={12} />
                     {copied === "api-key" ? "Copied!" : "Copy"}

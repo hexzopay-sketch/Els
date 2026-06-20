@@ -157,7 +157,7 @@ func main() {
 	flag.Parse()
 
 	if *target == "" {
-		fmt.Fprintf(os.Stderr, "Usage: levl7-ddoser -method UDP -target x.x.x.x -port 80 -time 30 -workers 10\n")
+		fmt.Fprintf(os.Stderr, "Usage: el7-ddoser -method UDP -target x.x.x.x -port 80 -time 30 -workers 10\n")
 		os.Exit(1)
 	}
 

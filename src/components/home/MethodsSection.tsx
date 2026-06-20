@@ -55,7 +55,7 @@ export function MethodsSection() {
             key={layer}
             onClick={() => setSelectedLayer(layer)}
             className={`px-6 py-2 rounded-lg font-semibold border-2 transition-all ${selectedLayer === layer
-                ? "bg-primary text-white border-primary"
+                ? "bg-primary text-background border-primary"
                 : "bg-transparent text-text border-muted hover:border-primary"
               }`}
           >

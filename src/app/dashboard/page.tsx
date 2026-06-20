@@ -95,11 +95,11 @@ export default function Dashboard() {
             <motion.div
               key={i}
               variants={slideUp}
-              className="group relative rounded-lg border border-[#30363d] bg-[#161b22] p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#58a6ff]/20 hover:shadow-lg hover:shadow-black/20"
+              className="group relative rounded-lg border border-[#30363d] bg-[#161b22] p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e6edf3]/20 hover:shadow-lg hover:shadow-black/20"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[#8b949e] text-sm">{stat.label}</span>
-                <span className="text-[#8b949e] group-hover:text-[#58a6ff] transition-colors duration-200">{stat.icon}</span>
+                <span className="text-[#8b949e] group-hover:text-[#e6edf3] transition-colors duration-200">{stat.icon}</span>
               </div>
               <p className="text-xl font-semibold text-[#e6edf3]">
                 <AnimatedValue value={stat.value} />
@@ -115,7 +115,7 @@ export default function Dashboard() {
           className="rounded-lg border border-[#30363d] bg-[#161b22] p-5"
         >
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp size={16} className="text-[#58a6ff]" />
+            <TrendingUp size={16} className="text-[#e6edf3]" />
             <h2 className="text-sm font-medium text-[#e6edf3]">Attacks (Last 7 Days)</h2>
           </div>
           <AttacksChart data={attacksData} />

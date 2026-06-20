@@ -120,7 +120,7 @@ export default function ProofManagement() {
                 <Upload size={32} className="text-text-muted" />
                 <p className="text-text-muted text-sm mb-3">Drop an image/video here</p>
                 <button type="button" onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-2 bg-primary text-white rounded-lg px-5 py-2 text-sm font-medium hover:brightness-110 transition-all"
+                  className="inline-flex items-center gap-2 bg-primary text-background rounded-lg px-5 py-2 text-sm font-medium hover:brightness-110 transition-all"
                 >
                   <Upload size={16} /> Upload File
                 </button>

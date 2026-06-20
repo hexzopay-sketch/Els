@@ -38,7 +38,7 @@ export default function Panel() {
                 <button
                     onClick={() => setActiveLayer('L4')}
                     className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
-                        activeLayer === 'L4' ? 'bg-[#58a6ff]/10 text-[#58a6ff]' : 'text-[#8b949e] hover:text-[#e6edf3]'
+                        activeLayer === 'L4' ? 'bg-[#e6edf3]/10 text-[#e6edf3]' : 'text-[#8b949e] hover:text-[#e6edf3]'
                     }`}
                 >
                     Layer 4
@@ -46,7 +46,7 @@ export default function Panel() {
                 <button
                     onClick={() => setActiveLayer('L7')}
                     className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
-                        activeLayer === 'L7' ? 'bg-[#58a6ff]/10 text-[#58a6ff]' : 'text-[#8b949e] hover:text-[#e6edf3]'
+                        activeLayer === 'L7' ? 'bg-[#e6edf3]/10 text-[#e6edf3]' : 'text-[#8b949e] hover:text-[#e6edf3]'
                     }`}
                 >
                     Layer 7

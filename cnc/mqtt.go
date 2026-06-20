@@ -24,7 +24,7 @@ type MQTTConfig struct {
 func getMQTTConfig() MQTTConfig {
 	return MQTTConfig{
 		Broker:   "tcp://127.0.0.1:1883",
-		Username: "levl7c2",
+		Username: "el7c2",
 		Password: "CHANGEME",
 	}
 }
@@ -36,7 +36,7 @@ func initMQTT() {
 	opts.AddBroker(cfg.Broker)
 	opts.SetUsername(cfg.Username)
 	opts.SetPassword(cfg.Password)
-	opts.SetClientID("levl7c2_backend")
+	opts.SetClientID("el7c2_backend")
 	opts.SetCleanSession(true)
 	opts.SetAutoReconnect(true)
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
@@ -44,7 +44,7 @@ func initMQTT() {
 	})
 	opts.SetOnConnectHandler(func(c mqtt.Client) {
 		log.Println("MQTT reconnected")
-		token := c.Subscribe("levl7/status/+", 0, handleBotStatus)
+		token := c.Subscribe("el7/status/+", 0, handleBotStatus)
 		token.Wait()
 		if token.Error() != nil {
 			log.Printf("MQTT status subscribe error: %v", token.Error())
@@ -61,7 +61,7 @@ func initMQTT() {
 	}
 	mqttClient = client
 
-	token = client.Subscribe("levl7/status/+", 0, handleBotStatus)
+	token = client.Subscribe("el7/status/+", 0, handleBotStatus)
 	token.Wait()
 	if token.Error() != nil {
 		log.Printf("MQTT status subscribe error: %v", token.Error())
@@ -107,7 +107,7 @@ func publishCommand(cmd interface{}) {
 		return
 	}
 
-	token := mqttClient.Publish("levl7/cmd/all", 0, false, payload)
+	token := mqttClient.Publish("el7/cmd/all", 0, false, payload)
 	token.Wait()
 	if token.Error() != nil {
 		log.Printf("MQTT publish error: %v", token.Error())

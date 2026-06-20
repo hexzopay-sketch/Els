@@ -129,7 +129,7 @@ export default function ProfilePage() {
           animate="animate"
           className="rounded-lg border border-[#30363d] bg-[#161b22] overflow-hidden"
         >
-          <div className="bg-gradient-to-r from-[#58a6ff]/5 to-transparent p-6">
+          <div className="bg-gradient-to-r from-[#e6edf3]/5 to-transparent p-6">
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-3">
                 {profile.avatar_url ? (
@@ -171,12 +171,12 @@ export default function ProfilePage() {
                     value={avatarUrl}
                     onChange={(e) => setAvatarUrl(e.target.value)}
                     placeholder="https://example.com/photo.jpg"
-                    className="flex-1 bg-[#21262d] border border-[#30363d] rounded-md px-3 py-2 text-sm text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-1 focus:ring-[#58a6ff]"
+                    className="flex-1 bg-[#21262d] border border-[#30363d] rounded-md px-3 py-2 text-sm text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-1 focus:ring-[#e6edf3]"
                   />
                   <button
                     onClick={saveAvatar}
                     disabled={saving || !avatarUrl}
-                    className="bg-[#58a6ff] text-white px-4 py-2 rounded-md text-sm font-medium hover:brightness-110 transition-all disabled:opacity-50"
+                    className="bg-[#e6edf3] text-background px-4 py-2 rounded-md text-sm font-medium hover:brightness-110 transition-all disabled:opacity-50"
                   >
                     {saving ? "..." : "Save"}
                   </button>
@@ -197,7 +197,7 @@ export default function ProfilePage() {
                 <span className="text-xs text-[#8b949e]">User ID</span>
                 <button
                   onClick={() => copyToClipboard(profile.id, setCopiedId)}
-                  className="text-[#8b949e] hover:text-[#58a6ff] transition-colors"
+                  className="text-[#8b949e] hover:text-[#e6edf3] transition-colors"
                 >
                   {copiedId ? <CheckCircle size={14} className="text-[#3fb950]" /> : <Copy size={14} />}
                 </button>
@@ -214,19 +214,19 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowApiKey(!showApiKey)}
-                    className="text-xs text-[#8b949e] hover:text-[#58a6ff] transition-colors"
+                    className="text-xs text-[#8b949e] hover:text-[#e6edf3] transition-colors"
                   >
                     {showApiKey ? "Hide" : "Show"}
                   </button>
                   <button
                     onClick={() => copyToClipboard(profile.api_key, setCopiedKey)}
-                    className="text-[#8b949e] hover:text-[#58a6ff] transition-colors"
+                    className="text-[#8b949e] hover:text-[#e6edf3] transition-colors"
                   >
                     {copiedKey ? <CheckCircle size={14} className="text-[#3fb950]" /> : <Copy size={14} />}
                   </button>
                 </div>
               </div>
-              <code className="block text-sm text-[#58a6ff] break-words font-mono">
+              <code className="block text-sm text-[#e6edf3] break-words font-mono">
                 {showApiKey ? profile.api_key : profile.api_key.slice(0, 8) + "••••••••••••"}
               </code>
             </div>
@@ -266,7 +266,7 @@ export default function ProfilePage() {
                   value={pwCurrent}
                   onChange={(e) => setPwCurrent(e.target.value)}
                   placeholder="Current password"
-                  className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-1 focus:ring-[#58a6ff] pr-9"
+                  className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-1 focus:ring-[#e6edf3] pr-9"
                 />
                 <button
                   onClick={() => setShowPw(!showPw)}
@@ -280,19 +280,19 @@ export default function ProfilePage() {
                 value={pwNew}
                 onChange={(e) => setPwNew(e.target.value)}
                 placeholder="New password"
-                className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-1 focus:ring-[#58a6ff]"
+                className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-1 focus:ring-[#e6edf3]"
               />
               <input
                 type="password"
                 value={pwConfirm}
                 onChange={(e) => setPwConfirm(e.target.value)}
                 placeholder="Confirm new password"
-                className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-1 focus:ring-[#58a6ff]"
+                className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-sm text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-1 focus:ring-[#e6edf3]"
               />
               <button
                 onClick={handleChangePassword}
                 disabled={changingPw || !pwCurrent || !pwNew || !pwConfirm}
-                className="w-full py-2 bg-[#58a6ff] text-white text-sm font-medium rounded-md hover:brightness-110 transition-all disabled:opacity-50"
+                className="w-full py-2 bg-[#e6edf3] text-background text-sm font-medium rounded-md hover:brightness-110 transition-all disabled:opacity-50"
               >
                 {changingPw ? "Changing..." : "Change Password"}
               </button>

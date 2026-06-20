@@ -51,10 +51,10 @@ func (m *MongoDBBackend) seedAdmin() {
 		admin := User{
 			ID: generateID(), Username: "admin", Email: "admin@admin.com",
 			Password: hashPassword("admin"), Rule: "Admin", Plan: "Ultimate",
-			JoinDate: time.Now().Format(time.RFC3339), MaxConcurrents: 999, MaxSeconds: 86400, APIKey: generateToken(),
+			JoinDate: time.Now().Format(time.RFC3339), MaxConcurrents: 999, MaxOngoing: 999, MaxSeconds: 86400, APIKey: generateToken(),
 		}
 		m.SaveUser(admin)
-		free := Plan{Name: "Free", MaxConcurrents: 1, MaxSeconds: 300, MinSeconds: 10}
+		free := Plan{Name: "Free", MaxConcurrents: 1, MaxOngoing: 1, MaxSeconds: 300, MinSeconds: 10}
 		m.SavePlan(free)
 	}
 }

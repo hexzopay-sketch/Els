@@ -150,7 +150,7 @@ export default function Layer7Form({ methods = [] }: { methods: Method[] }) {
                 className={`w-full py-2 rounded-md text-sm font-medium transition-all ${
                     isDisabled
                         ? "bg-muted text-text-muted cursor-not-allowed"
-                        : "bg-primary text-white hover:brightness-110"
+                        : "bg-primary text-background hover:brightness-110"
                 }`}
             >
                 {isSubmitting ? "Launching..." : "Launch Attack"}

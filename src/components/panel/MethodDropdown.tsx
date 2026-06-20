@@ -58,7 +58,7 @@ export default function MethodDropdown({ methods, value, onChange }: MethodDropd
                     minHeight: "34px",
                     borderRadius: "6px",
                     boxShadow: "none",
-                    "&:hover": { borderColor: "#58a6ff" },
+                    "&:hover": { borderColor: "#e6edf3" },
                 }),
                 singleValue: (base) => ({ ...base, color: "#e6edf3", fontSize: "13px" }),
                 input: (base) => ({ ...base, color: "#e6edf3", fontSize: "13px" }),
@@ -83,7 +83,7 @@ export default function MethodDropdown({ methods, value, onChange }: MethodDropd
                 ...theme,
                 colors: {
                     ...theme.colors,
-                    primary: "#58a6ff",
+                    primary: "#e6edf3",
                     primary25: "#21262d",
                 },
             })}
