@@ -246,10 +246,22 @@ func getUserByUsername(username string) (User, bool) {
 
 func getUserByToken(token string) (User, bool) {
 	username, ok := storage.GetSessionUsername(token)
-	if !ok {
-		return User{}, false
+	if ok {
+		return getUserByUsername(username)
 	}
-	return getUserByUsername(username)
+	var u User
+	users.Range(func(_, v interface{}) bool {
+		user := v.(User)
+		if user.APIKey == token {
+			u = user
+			return false
+		}
+		return true
+	})
+	if u.Username != "" {
+		return u, true
+	}
+	return User{}, false
 }
 
 func deleteUser(username string) {
