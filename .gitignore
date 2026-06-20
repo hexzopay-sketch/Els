@@ -46,5 +46,12 @@ next-env.d.ts
 /db/
 /uploads/
 /scripts/
+
+# sims
 .sims/
+
+# cloudflare
+.cloudflare/
+
+# next.js build output (cnc + root)
 cnc/out/
