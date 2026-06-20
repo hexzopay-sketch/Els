@@ -65,8 +65,8 @@ export default function ServerManagement() {
         api.get("/servers", { headers: { Authorization: `Bearer ${token}` } }),
         api.get("/workers", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
-      setServers(s.data);
-      setWorkers(w.data);
+      setServers(Array.isArray(s.data) ? s.data : []);
+      setWorkers(Array.isArray(w.data) ? w.data : []);
     } catch (err) {
       console.error("Failed to fetch:", err);
     } finally {

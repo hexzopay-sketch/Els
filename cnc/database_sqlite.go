@@ -185,7 +185,7 @@ func (s *SQLiteBackend) GetAllUsers() ([]User, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var us []User
+	us := make([]User, 0)
 	for rows.Next() {
 		var u User
 		rows.Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Rule, &u.Plan, &u.JoinDate, &u.ExpirationDate, &u.MaxConcurrents, &u.MaxSeconds, &u.APIKey, &u.AvatarURL)
@@ -220,7 +220,7 @@ func (s *SQLiteBackend) GetAllPlans() ([]Plan, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var ps []Plan
+	ps := make([]Plan, 0)
 	for rows.Next() {
 		var p Plan
 		var prem, api int
@@ -267,7 +267,7 @@ func (s *SQLiteBackend) GetAllMethods() ([]Method, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var ms []Method
+	ms := make([]Method, 0)
 	for rows.Next() {
 		var m Method
 		var l4, l7, amp, prem, prx int
@@ -301,7 +301,7 @@ func (s *SQLiteBackend) GetAllOngoingAttacks() ([]Attack, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var as []Attack
+	as := make([]Attack, 0)
 	for rows.Next() {
 		var a Attack
 		var st string
@@ -345,7 +345,7 @@ func (s *SQLiteBackend) GetAllBots() ([]BotConnection, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var bs []BotConnection
+	bs := make([]BotConnection, 0)
 	for rows.Next() {
 		var b BotConnection
 		var on int
@@ -375,7 +375,7 @@ func (s *SQLiteBackend) GetAllProofs() ([]Proof, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var ps []Proof
+	ps := make([]Proof, 0)
 	for rows.Next() {
 		var p Proof
 		var ca string
@@ -403,7 +403,7 @@ func (s *SQLiteBackend) GetAllBroadcasts() ([]Broadcast, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var bs []Broadcast
+	bs := make([]Broadcast, 0)
 	for rows.Next() {
 		var b Broadcast
 		var ca string
@@ -420,7 +420,7 @@ func (s *SQLiteBackend) GetActiveBroadcasts() ([]Broadcast, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var bs []Broadcast
+	bs := make([]Broadcast, 0)
 	for rows.Next() {
 		var b Broadcast
 		var ca string
@@ -451,7 +451,7 @@ func (s *SQLiteBackend) GetAllWorkers() ([]Worker, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var ws []Worker
+	ws := make([]Worker, 0)
 	for rows.Next() {
 		var w Worker
 		var hb, ca string

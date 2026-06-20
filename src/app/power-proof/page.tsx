@@ -24,7 +24,7 @@ export default function PowerProofPage() {
         const res = await fetch("/api/v1/proofs");
         if (res.ok) {
           const data = await res.json();
-          setProofs(data);
+          setProofs(Array.isArray(data) ? data : []);
         }
       } catch {} finally {
         setLoading(false);

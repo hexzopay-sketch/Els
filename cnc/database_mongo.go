@@ -88,7 +88,7 @@ func (m *MongoDBBackend) GetAllUsers() ([]User, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var us []User
+	us := make([]User, 0)
 	cursor.All(context.TODO(), &us)
 	return us, nil
 }
@@ -114,7 +114,7 @@ func (m *MongoDBBackend) GetAllPlans() ([]Plan, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var ps []Plan
+	ps := make([]Plan, 0)
 	cursor.All(context.TODO(), &ps)
 	return ps, nil
 }
@@ -140,7 +140,7 @@ func (m *MongoDBBackend) GetAllMethods() ([]Method, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var ms []Method
+	ms := make([]Method, 0)
 	cursor.All(context.TODO(), &ms)
 	return ms, nil
 }
@@ -166,7 +166,7 @@ func (m *MongoDBBackend) GetAllOngoingAttacks() ([]Attack, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var as []Attack
+	as := make([]Attack, 0)
 	cursor.All(context.TODO(), &as)
 	return as, nil
 }
@@ -203,7 +203,7 @@ func (m *MongoDBBackend) GetAllBots() ([]BotConnection, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var bs []BotConnection
+	bs := make([]BotConnection, 0)
 	cursor.All(context.TODO(), &bs)
 	return bs, nil
 }
@@ -227,7 +227,7 @@ func (m *MongoDBBackend) GetAllProofs() ([]Proof, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var ps []Proof
+	ps := make([]Proof, 0)
 	cursor.All(context.TODO(), &ps)
 	return ps, nil
 }
@@ -251,7 +251,7 @@ func (m *MongoDBBackend) GetAllBroadcasts() ([]Broadcast, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var bs []Broadcast
+	bs := make([]Broadcast, 0)
 	cursor.All(context.TODO(), &bs)
 	return bs, nil
 }
@@ -271,7 +271,7 @@ func (m *MongoDBBackend) GetAllWorkers() ([]Worker, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var ws []Worker
+	ws := make([]Worker, 0)
 	cursor.All(context.TODO(), &ws)
 	return ws, nil
 }
@@ -318,7 +318,7 @@ func (m *MongoDBBackend) GetActiveBroadcasts() ([]Broadcast, error) {
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
-	var bs []Broadcast
+	bs := make([]Broadcast, 0)
 	cursor.All(context.TODO(), &bs)
 	return bs, nil
 }
